@@ -32,13 +32,20 @@ public interface BeanFactory {
      */
     void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) throws Exception;
 
-
     /**
      * 通过Bean名称获取注册Bean信息
      * @param beanName Bean名称
      * @return Bean信息
      */
     BeanDefinition getBeanDefinition(String beanName);
+
+    /**
+     * 获取构造函数的参数对象列表
+     * @param beanDefinition Bean注册信息
+     * @return 构造函数的参数对象列表
+     * @throws Exception 异常
+     */
+    Object[] getConstructorArgumentValues(BeanDefinition beanDefinition) throws Exception;
 
     /**
      * 是否存在Bean名称的Bean信息

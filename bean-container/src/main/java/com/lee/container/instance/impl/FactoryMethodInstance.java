@@ -1,6 +1,7 @@
 package com.lee.container.instance.impl;
 
 import com.lee.container.definition.BeanDefinition;
+import com.lee.container.factory.BeanFactory;
 import com.lee.container.instance.BeanInstance;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -26,7 +27,7 @@ public class FactoryMethodInstance implements BeanInstance {
      * @throws Exception 异常
      */
     @Override
-    public Object instance(BeanDefinition beanDefinition) throws Exception {
+    public Object instance(BeanDefinition beanDefinition, BeanFactory beanFactory) throws Exception {
         Objects.requireNonNull(beanDefinition.getFactoryMethodName(), "工厂方法名称factoryMethodName不能为空");
         Class<?> beanClass = beanDefinition.getBeanClass();
         Method method = beanClass.getDeclaredMethod(beanDefinition.getFactoryMethodName());

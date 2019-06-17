@@ -1,6 +1,9 @@
 package com.lee.container.definition;
 
 import org.apache.commons.lang3.StringUtils;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.List;
 
 /**
  * Bean注册信息
@@ -11,7 +14,14 @@ import org.apache.commons.lang3.StringUtils;
 
 public interface BeanDefinition {
 
+    /**
+     * 单例
+     */
     String SCOPE_SINGLETON = "singleton";
+
+    /**
+     * 原型
+     */
     String SCOPE_PROTOTYPE = "prototype";
 
     Class<?> getBeanClass();
@@ -29,6 +39,18 @@ public interface BeanDefinition {
     String getInitMethodName();
 
     String getDestroyMethodName();
+
+    List<Object> getConstructorArgumentValues();
+
+    //以下4个方法仅供BeanFactory使用，对于prototype,缓存构造方法或工厂方法
+    Constructor<?> getConstructor();
+
+    void setConstructor(Constructor<?> constructor);
+
+    Method getFactoryMethod();
+
+    void setFactoryMethod(Method method);
+
 
     default boolean validate() {
         // class没指定,工厂bean或工厂method不指定皆为不合法情况

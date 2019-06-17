@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 /**
- * 实例化方式工厂方法
+ * 实例生成器的工厂方法
  * @author lichujun
  * @date 2019/6/17 15:10
  */
