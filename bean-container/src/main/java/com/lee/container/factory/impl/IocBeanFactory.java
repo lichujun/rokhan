@@ -10,9 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import java.io.Closeable;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -33,10 +31,11 @@ public class IocBeanFactory implements BeanFactory, Closeable {
 
     // 考虑并发情况，默认256，防止扩容
     private static final int DEFAULT_SIZE = 256;
-
+    // 存放Bean注册信息的容器
     private Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
-
+    // 存放Bean对象的容器
     private Map<String, Object> beanMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
+
 
     @Override
     public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) throws Exception {
@@ -150,8 +149,8 @@ public class IocBeanFactory implements BeanFactory, Closeable {
     }
 
     @Override
-    public Object[] getConstructorArgumentValues(BeanDefinition beanDefinition) throws Exception {
-        List<Object> defs = beanDefinition.getConstructorArgumentValues();
+    public Object[] getArgumentValues(BeanDefinition beanDefinition) throws Exception {
+        List<Object> defs = beanDefinition.getArgumentValues();
         if (CollectionUtils.isEmpty(defs)) {
             return null;
         }

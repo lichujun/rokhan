@@ -50,7 +50,7 @@ public class IocBeanDefinition implements BeanDefinition {
     /**
      * 构造函数的参数对象列表
      */
-    private List<Object> constructorArgumentValues;
+    private List<Object> argumentValues;
 
     /**
      * 构造函数

@@ -40,7 +40,7 @@ public interface BeanDefinition {
 
     String getDestroyMethodName();
 
-    List<Object> getConstructorArgumentValues();
+    List<Object> getArgumentValues();
 
     //以下4个方法仅供BeanFactory使用，对于prototype,缓存构造方法或工厂方法
     Constructor<?> getConstructor();

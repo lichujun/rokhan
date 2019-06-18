@@ -40,12 +40,12 @@ public interface BeanFactory {
     BeanDefinition getBeanDefinition(String beanName);
 
     /**
-     * 获取构造函数的参数对象列表
+     * 获取方法的参数对象列表
      * @param beanDefinition Bean注册信息
-     * @return 构造函数的参数对象列表
+     * @return 方法的参数对象列表
      * @throws Exception 异常
      */
-    Object[] getConstructorArgumentValues(BeanDefinition beanDefinition) throws Exception;
+    Object[] getArgumentValues(BeanDefinition beanDefinition) throws Exception;
 
     /**
      * 是否存在Bean名称的Bean信息
