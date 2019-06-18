@@ -5,12 +5,14 @@ import com.lee.container.definition.BeanDefinition;
 import com.lee.container.factory.BeanFactory;
 import com.lee.container.instance.BeanInstance;
 import com.lee.container.instance.impl.BeanInstances;
+import com.lee.container.pojo.PropertyValue;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import java.io.Closeable;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -70,6 +72,56 @@ public class IocBeanFactory implements BeanFactory, Closeable {
     @Override
     public Object getBeanByName(String beanName) throws Exception {
         Objects.requireNonNull(beanName, "注册Bean需要输入beanName");
+        Object beanObject = doGetBeanWithoutDI(beanName);
+        BeanDefinition beanDefinition = getBeanDefinition(beanName);
+        setPropertyDIValues(beanDefinition, beanObject);
+        return beanObject;
+    }
+
+    /**
+     * 对Bean对象进行依赖注入
+     * @param beanDefinition Bean注册信息
+     * @param beanObject Bean对象
+     */
+    private void setPropertyDIValues(BeanDefinition beanDefinition, Object beanObject) throws Exception {
+        List<PropertyValue> propertyValues = beanDefinition.getPropertyValues();
+        if (CollectionUtils.isEmpty(propertyValues)) {
+            return;
+        }
+        for (PropertyValue propertyValue : propertyValues) {
+            String fieldName = propertyValue.getName();
+            if (StringUtils.isBlank(fieldName)) {
+                continue;
+            }
+            // 获取Field对象，并设置为可操作
+            Class<?> beanClass = beanObject.getClass();
+            Field field = beanClass.getDeclaredField(fieldName);
+            field.setAccessible(true);
+
+            Object fieldValue = propertyValue.getValue();
+            Object realFieldValue;
+            if (fieldValue == null) {
+                realFieldValue = null;
+            }
+            //
+            else if (fieldValue instanceof BeanReference) {
+                realFieldValue = doGetBeanWithoutDI(((BeanReference) fieldValue).getBeanName());
+            }
+            // TODO 其他类型处理，例如配置文件
+            else {
+                realFieldValue = null;
+            }
+            field.set(beanObject, realFieldValue);
+        }
+    }
+
+    /**
+     * 生成Bean对象，不进行依赖注入
+     * @param beanName Bean名称
+     * @return Bean对象
+     * @throws Exception 异常
+     */
+    private Object doGetBeanWithoutDI(String beanName) throws Exception {
         Object beanObject = beanMap.get(beanName);
         if (beanObject != null) {
             return beanObject;

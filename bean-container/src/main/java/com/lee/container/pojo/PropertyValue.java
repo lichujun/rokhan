@@ -4,16 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 描述Bean依赖
+ * 依赖
  * @author lichujun
- * @date 2019/6/17 16:42
+ * @date 2019/6/18 10:54
  */
 @Getter
 @AllArgsConstructor
-public class BeanReference {
-
+public class PropertyValue {
     /**
      * Bean名称
      */
-    private final String beanName;
+    private final String name;
+
+    /**
+     * Bean对象
+     */
+    private final Object value;
 }

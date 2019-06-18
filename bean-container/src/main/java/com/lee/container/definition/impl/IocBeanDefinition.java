@@ -1,6 +1,7 @@
 package com.lee.container.definition.impl;
 
 import com.lee.container.definition.BeanDefinition;
+import com.lee.container.pojo.PropertyValue;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -57,6 +58,11 @@ public class IocBeanDefinition implements BeanDefinition {
      * 注：用于缓存，用于生成prototype类型的对象
      */
     private Constructor<?> constructor;
+
+    /**
+     * 依赖
+     */
+    private List<PropertyValue> propertyValues;
 
     /**
      * 工厂方法

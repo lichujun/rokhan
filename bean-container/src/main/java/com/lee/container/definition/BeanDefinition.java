@@ -1,5 +1,6 @@
 package com.lee.container.definition;
 
+import com.lee.container.pojo.PropertyValue;
 import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -41,6 +42,8 @@ public interface BeanDefinition {
     String getDestroyMethodName();
 
     List<Object> getArgumentValues();
+
+    List<PropertyValue> getPropertyValues();
 
     //以下4个方法仅供BeanFactory使用，对于prototype,缓存构造方法或工厂方法
     Constructor<?> getConstructor();
