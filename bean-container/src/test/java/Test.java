@@ -1,11 +1,15 @@
-import com.lee.container.definition.BeanDefinition;
-import com.lee.container.definition.impl.IocBeanDefinition;
-import com.lee.container.factory.BeanFactory;
-import com.lee.container.factory.impl.BeanFactories;
-import com.lee.container.pojo.BeanReference;
 
+import com.lee.rokhan.common.utils.ReflectionUtils;
+import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
+import com.lee.rokhan.container.factory.BeanFactory;
+import com.lee.rokhan.container.factory.impl.BeanFactories;
+import com.lee.rokhan.container.pojo.BeanReference;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author lichujun
@@ -15,7 +19,7 @@ public class Test {
 
     private static BeanFactory beanFactory = BeanFactories.getIocBeanFactory();
 
-    public static void main(String[] args1) throws Exception {
+    public static void main(String[] args1) throws Throwable {
         /*IocBeanDefinition beanDefinition = new IocBeanDefinition();
         beanDefinition.setBeanClass(Bean1.class);
         beanDefinition.setScope(BeanDefinition.SCOPE_SINGLETON);
@@ -24,7 +28,7 @@ public class Test {
 
         beanFactory.registerBeanDefinition("bean1", beanDefinition);
 
-        Bean1 obj = (Bean1) beanFactory.getBeanByName("bean1");
+        Bean1 obj = (Bean1) beanFactory.getBean("bean1");
         obj.doSomething();*/
 
 
@@ -36,9 +40,9 @@ public class Test {
         beanDefinition1.setDestroyMethodName("destroy");
 
         beanFactory.registerBeanDefinition("bean1", beanDefinition1);
-        Bean1 obj1 = (Bean1) beanFactory.getBeanByName("bean1");
+        Bean1 obj1 = (Bean1) beanFactory.getBean("bean1");
         obj1.doSomething();
-        Bean1 obj2 = (Bean1) beanFactory.getBeanByName("bean1");
+        Bean1 obj2 = (Bean1) beanFactory.getBean("bean1");
         obj2.doSomething();*/
 
         IocBeanDefinition bd = new IocBeanDefinition();
@@ -58,8 +62,14 @@ public class Test {
 
         //bf.preInstantiateSingletons();
 
-        ABean abean = (ABean) beanFactory.getBeanByName("abean");
+        ABean abean = (ABean) beanFactory.getBean("abean");
 
         abean.doSomthing();
+
+        /*CBean ccBean = new CCBean("hh");
+        *//*Set<Field> fieldSet = ReflectionUtils.getDeclaredFields(ccBean);
+        System.out.println(fieldSet);*//*
+        Set<Method> methodSet = ReflectionUtils.getDeclaredMethods(ccBean);
+        System.out.println(methodSet);*/
     }
 }
