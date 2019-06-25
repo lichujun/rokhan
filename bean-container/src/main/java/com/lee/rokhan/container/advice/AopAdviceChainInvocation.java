@@ -1,19 +1,23 @@
 package com.lee.rokhan.container.advice;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.lang.reflect.Method;
 import java.util.List;
 
 /**
+ * 执行Advice链
  * @author lichujun
  * @date 2019/6/19 15:26
  */
+@Slf4j
 public class AopAdviceChainInvocation {
     private static Method invokeMethod;
     static {
         try {
             invokeMethod = AopAdviceChainInvocation.class.getMethod("invoke");
         } catch (NoSuchMethodException | SecurityException e) {
-            e.printStackTrace();
+            log.error("找不到该方法", e);
         }
     }
 

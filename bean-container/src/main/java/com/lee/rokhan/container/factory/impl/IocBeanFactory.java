@@ -48,7 +48,7 @@ public class IocBeanFactory implements BeanFactory, Closeable {
 
         // 校验Bean注册信息是否合法
         if (!beanDefinition.validate()) {
-            log.error("Bean名称为[{}]的注册信息不合法");
+            log.error("Bean名称为[{}]的注册信息不合法", beanName);
             throw new RuntimeException("Bean名称为[" + beanName + "]的注册信息不合法");
         }
         // 判断是否已经存在了Bean名称的注册信息，如果有，就停止运行

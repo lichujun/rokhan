@@ -3,7 +3,6 @@ package com.lee.rokhan.container.proxy.impl;
 import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.factory.BeanFactory;
-import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import com.lee.rokhan.container.proxy.AopProxy;
 import com.lee.rokhan.container.utils.AopProxyUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +21,7 @@ import java.util.List;
 @Slf4j
 public class CglibDynamicAopProxy implements AopProxy, MethodInterceptor {
 
-    private static Enhancer enhancer = new Enhancer();
+    private static final Enhancer ENHANCER = new Enhancer();
 
     private final String beanName;
     private final Object target;
@@ -50,20 +49,20 @@ public class CglibDynamicAopProxy implements AopProxy, MethodInterceptor {
             log.debug("为" + target + "创建cglib代理。");
         }
         Class<?> superClass = this.target.getClass();
-        enhancer.setSuperclass(superClass);
-        enhancer.setInterfaces(this.getClass().getInterfaces());
-        enhancer.setCallback(this);
+        ENHANCER.setSuperclass(superClass);
+        ENHANCER.setInterfaces(this.getClass().getInterfaces());
+        ENHANCER.setCallback(this);
         Constructor<?> constructor = null;
         try {
-            constructor = superClass.getConstructor();
+            constructor = superClass.getDeclaredConstructor();
         } catch (NoSuchMethodException | SecurityException e) {
             log.warn("获取构造方法发生异常");
         }
         if (constructor != null) {
-            return enhancer.create();
+            return ENHANCER.create();
         } else {
             BeanDefinition bd = beanFactory.getBeanDefinition(beanName);
-            return enhancer.create(bd.getConstructor().getParameterTypes(), bd.getArgumentRealValues(beanFactory));
+            return ENHANCER.create(bd.getConstructor().getParameterTypes(), bd.getArgumentRealValues(beanFactory));
         }
     }
 

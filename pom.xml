@@ -11,6 +11,7 @@
     <modules>
         <module>common</module>
         <module>bean-container</module>
+        <module>demo</module>
     </modules>
 
     <properties>
@@ -27,6 +28,7 @@
         <aspectJ.version>1.9.4</aspectJ.version>
         <maven.compile.version>2.3</maven.compile.version>
         <common.version>1.0-SNAPSHOT</common.version>
+        <bean.container.version>1.0-SNAPSHOT</bean.container.version>
     </properties>
 
     <dependencyManagement>
@@ -35,6 +37,12 @@
                 <groupId>com.lee</groupId>
                 <artifactId>common</artifactId>
                 <version>${common.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.lee</groupId>
+                <artifactId>bean-container</artifactId>
+                <version>${bean.container.version}</version>
             </dependency>
 
             <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
