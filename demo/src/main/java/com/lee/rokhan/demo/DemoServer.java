@@ -1,6 +1,8 @@
 package com.lee.rokhan.demo;
 
 import com.lee.rokhan.container.advice.MethodBeforeAdvice;
+import com.lee.rokhan.container.advice.MethodReturnAdvice;
+import com.lee.rokhan.container.advice.MethodSurroundAdvice;
 import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.advisor.impl.AspectJPointcutAdvisor;
 import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
@@ -26,8 +28,9 @@ public class DemoServer {
 
         IocBeanDefinition adviceBeanDefinition = new IocBeanDefinition();
         adviceBeanDefinition.setBeanClass(DemoServer.class);
-        adviceBeanDefinition.setFactoryMethodName("create");
+        adviceBeanDefinition.setFactoryMethodName("createReturn");
         beanFactory.registerBeanDefinition("demoAdvice", adviceBeanDefinition);
+
 
         beanFactory.registerBeanPostProcessor(new AdvisorAutoProxyCreator(Collections.singletonList(advisor), beanFactory));
         beanFactory.registerBeanDefinition("demo", iocBeanDefinition);
@@ -45,7 +48,22 @@ public class DemoServer {
         System.out.println("hello world");
     }
 
-    public static MethodBeforeAdvice create() {
-        return (method, args, target) -> System.out.println("before");
+    public static MethodSurroundAdvice createSurround() {
+        return (method, args, target) -> {
+            System.out.println("你是谁");
+            Object returnVal = method.invoke(target, args);
+            System.out.println("老子你都不认识了吗，吃屎去");
+            return returnVal;
+        };
+    }
+
+    public static MethodBeforeAdvice createBefore() {
+        return ((method, args, target) -> System.out.println("before"));
+    }
+
+    public static MethodReturnAdvice createReturn() {
+        return ((returnValue, method, args, target) -> {
+            System.out.println("return");
+        });
     }
 }

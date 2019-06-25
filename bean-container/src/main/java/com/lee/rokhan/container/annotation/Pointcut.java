@@ -1,16 +1,16 @@
-package com.lee.rokhan.common.annotation;
+package com.lee.rokhan.container.annotation;
 
 import java.lang.annotation.*;
 
 /**
- * 组件注解
+ * 切入点
  * @author lichujun
- * @date 2019/4/22 16:21
+ * @date 2019/6/25 15:54
  */
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Component {
+public @interface Pointcut {
 
     String value() default "";
 }

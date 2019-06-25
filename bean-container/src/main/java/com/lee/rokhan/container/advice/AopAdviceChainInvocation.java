@@ -45,9 +45,9 @@ public class AopAdviceChainInvocation {
             if (advice instanceof MethodBeforeAdvice) {
                 // 执行前置增强
                 ((MethodBeforeAdvice) advice).before(method, args, target);
-            } else if (advice instanceof MethodSurroudAdvice) {
+            } else if (advice instanceof MethodSurroundAdvice) {
                 // 执行环绕增强和异常处理增强。注意这里给入的method 和 对象 是invoke方法和链对象
-                return ((MethodSurroudAdvice) advice).invoke(invokeMethod, null, this);
+                return ((MethodSurroundAdvice) advice).invoke(invokeMethod, null, this);
             } else if (advice instanceof MethodReturnAdvice) {
                 // 当是后置增强时，先得得到结果，再执行后置增强逻辑
                 Object returnValue = this.invoke();

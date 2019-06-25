@@ -7,7 +7,7 @@ import java.lang.reflect.Method;
  * @author lichujun
  * @date 2019/6/18 14:24
  */
-public interface MethodSurroudAdvice extends Advice {
+public interface MethodSurroundAdvice extends Advice {
 
     /**
      * 方法的环绕通知
