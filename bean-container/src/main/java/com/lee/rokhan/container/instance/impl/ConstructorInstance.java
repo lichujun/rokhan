@@ -10,12 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.Constructor;
 
 /**
+ * 通过构造方法实例化Bean对象
  * @author lichujun
  * @date 2019/6/17 15:01
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class ConstructorInstance extends IocConstructorDetermine implements BeanInstance {
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
+public class ConstructorInstance extends IocDetermine implements BeanInstance {
 
     /**
      * 通过构造函数实例化Bean对象

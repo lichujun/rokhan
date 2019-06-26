@@ -1,6 +1,8 @@
-package com.lee.rokhan.container.instance.impl;
+package com.lee.rokhan.container.instance;
 
-import com.lee.rokhan.container.instance.BeanInstance;
+import com.lee.rokhan.container.instance.impl.ConstructorInstance;
+import com.lee.rokhan.container.instance.impl.FactoryBeanInstance;
+import com.lee.rokhan.container.instance.impl.FactoryMethodInstance;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;

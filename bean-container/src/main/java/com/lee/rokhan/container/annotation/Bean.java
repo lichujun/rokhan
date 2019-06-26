@@ -7,4 +7,5 @@ package com.lee.rokhan.container.annotation;
  */
 public @interface Bean {
 
+    String value() default "";
 }

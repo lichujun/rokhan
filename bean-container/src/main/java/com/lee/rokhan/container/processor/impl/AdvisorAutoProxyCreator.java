@@ -19,8 +19,14 @@ import java.util.*;
 @AllArgsConstructor
 public class AdvisorAutoProxyCreator implements BeanPostProcessor {
 
+    /**
+     * 增强器集合
+     */
     private final List<Advisor> advisors;
 
+    /**
+     * Bean工厂
+     */
     private final BeanFactory beanFactory;
 
     @Override
@@ -40,10 +46,10 @@ public class AdvisorAutoProxyCreator implements BeanPostProcessor {
     }
 
     /**
-     * 获取匹配到所有的Advisor
+     * 获取匹配到所有的增强器
      * @param bean Bean对象
      * @param beanName Bean名称
-     * @return 匹配到的所有Advisor
+     * @return 匹配到的所有增强器
      */
     private List<Advisor> getMatchedAdvisors(Object bean, String beanName) {
         if (CollectionUtils.isEmpty(advisors)) {
@@ -67,6 +73,13 @@ public class AdvisorAutoProxyCreator implements BeanPostProcessor {
         return matchAdvisors;
     }
 
+    /**
+     * 判断是否能匹配到增强器
+     * @param advisor 增强器
+     * @param beanClass 类对象
+     * @param methods 类的所有方法
+     * @return 该类的方法是否能匹配到增强器
+     */
     private boolean isPointcutMatchBean(Advisor advisor, Class<?> beanClass, Set<Method> methods) {
         Pointcut p = advisor.getPointcut();
 
@@ -86,6 +99,14 @@ public class AdvisorAutoProxyCreator implements BeanPostProcessor {
         return false;
     }
 
+    /**
+     * 创建代理对象
+     * @param bean Bean对象
+     * @param beanName Bean名称
+     * @param matchAdvisors 匹配到的所有增强器
+     * @return 代理对象
+     * @throws Throwable 异常
+     */
     private Object createProxy(Object bean, String beanName, List<Advisor> matchAdvisors) throws Throwable {
         // 通过AopProxyFactory工厂去完成选择、和创建代理对象的工作。
         return AopProxyFactories.getDefaultAopProxyFactory()

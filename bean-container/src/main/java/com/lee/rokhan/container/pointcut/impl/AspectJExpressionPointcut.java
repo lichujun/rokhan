@@ -4,7 +4,6 @@ import com.lee.rokhan.container.pointcut.Pointcut;
 import org.aspectj.weaver.tools.PointcutExpression;
 import org.aspectj.weaver.tools.PointcutParser;
 import org.aspectj.weaver.tools.ShadowMatch;
-
 import java.lang.reflect.Method;
 
 /**
@@ -22,13 +21,9 @@ public class AspectJExpressionPointcut implements Pointcut {
      * AspectJ表达式
      * 用来匹配类或者方法
      */
-    private final String expression;
     private final PointcutExpression pointcutExpression;
 
-
     public AspectJExpressionPointcut(String expression) {
-        super();
-        this.expression = expression;
         this.pointcutExpression = POINTCUT_PARSER.parsePointcutExpression(expression);
     }
 
@@ -41,10 +36,6 @@ public class AspectJExpressionPointcut implements Pointcut {
     public boolean matchMethod(Method targetMethod) {
         ShadowMatch sm = pointcutExpression.matchesMethodExecution(targetMethod);
         return sm.alwaysMatches();
-    }
-
-    public String getExpression() {
-        return expression;
     }
 
 }

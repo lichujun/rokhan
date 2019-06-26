@@ -7,7 +7,7 @@ import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.advisor.impl.AspectJPointcutAdvisor;
 import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.factory.BeanFactory;
-import com.lee.rokhan.container.factory.impl.BeanFactories;
+import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import com.lee.rokhan.container.processor.impl.AdvisorAutoProxyCreator;
 import java.util.Collections;
 
@@ -21,7 +21,7 @@ public class DemoServer {
         IocBeanDefinition iocBeanDefinition = new IocBeanDefinition();
         iocBeanDefinition.setBeanClass(DemoServer.class);
 
-        BeanFactory beanFactory = BeanFactories.getIocBeanFactory();
+        BeanFactory beanFactory = new IocBeanFactory();
 
         // 注册切面
         Advisor advisor = new AspectJPointcutAdvisor("demoAdvice", "execution(* com.lee.rokhan.demo.*.doSomething (..))");

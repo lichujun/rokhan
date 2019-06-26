@@ -6,6 +6,7 @@ import com.lee.rokhan.container.pointcut.impl.AspectJExpressionPointcut;
 import lombok.Getter;
 
 /**
+ * AspectJ增强器
  * @author lichujun
  * @date 2019/6/18 15:06
  */

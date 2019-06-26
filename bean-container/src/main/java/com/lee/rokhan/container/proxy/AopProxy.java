@@ -1,7 +1,7 @@
 package com.lee.rokhan.container.proxy;
 
 /**
- * Aop代理
+ * Aop代理：1、JDK动态代理 2、JDK动态代理 ...
  * @author lichujun
  * @date 2019/6/18 17:43
  */

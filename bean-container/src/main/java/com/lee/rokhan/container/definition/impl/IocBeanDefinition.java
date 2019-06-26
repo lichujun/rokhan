@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 /**
- * Bean容器注册信息
+ * Ioc Bean容器注册信息
  *
  * @author lichujun
  * @date 2019/6/17 11:31

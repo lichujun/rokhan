@@ -1,6 +1,8 @@
-package com.lee.rokhan.container;
+package com.lee.rokhan.container.context.impl;
 
 import com.lee.rokhan.container.annotation.*;
+import com.lee.rokhan.container.context.ApplicationContext;
+import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -8,12 +10,12 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Set;
 
 /**
- * Ioc容器初始化
+ * Bean容器
  * @author lichujun
  * @date 2019/6/25 16:30
  */
 @AllArgsConstructor
-public class IocApplicationContext {
+public class AnnotationApplicationContext extends IocBeanFactory implements ApplicationContext {
 
     private final Set<Class<?>> classSet;
 
@@ -30,8 +32,8 @@ public class IocApplicationContext {
                 continue;
             }
             String beanName = getComponentName(clazz);
-            if (StringUtils.isBlank(beanName)) {
-                continue;
+            if (StringUtils.isNotBlank(beanName)) {
+
             }
 
         }

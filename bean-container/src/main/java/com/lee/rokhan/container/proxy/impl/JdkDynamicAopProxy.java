@@ -4,33 +4,38 @@ import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.proxy.AopProxy;
 import com.lee.rokhan.container.utils.AopProxyUtils;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
 
 /**
+ * 通过JDK生成代理对象
  * @author lichujun
  * @date 2019/6/19 15:28
  */
 @Slf4j
+@AllArgsConstructor
 public class JdkDynamicAopProxy implements AopProxy, InvocationHandler {
 
+    /**
+     * Bean名称
+     */
     private final String beanName;
+    /**
+     * Bean对象
+     */
     private final Object target;
+    /**
+     * 匹配到的增强器
+     */
     private final List<Advisor> matchAdvisors;
-
-    private BeanFactory beanFactory;
-
-    public JdkDynamicAopProxy(String beanName, Object target, List<Advisor> matchAdvisors, BeanFactory beanFactory) {
-        super();
-        this.beanName = beanName;
-        this.target = target;
-        this.matchAdvisors = matchAdvisors;
-        this.beanFactory = beanFactory;
-    }
+    /**
+     * Bean工厂
+     */
+    private final BeanFactory beanFactory;
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {

@@ -3,7 +3,7 @@ package com.lee.rokhan.container.annotation;
 import java.lang.annotation.*;
 
 /**
- * 切入点
+ * 切点
  * @author lichujun
  * @date 2019/6/25 15:54
  */

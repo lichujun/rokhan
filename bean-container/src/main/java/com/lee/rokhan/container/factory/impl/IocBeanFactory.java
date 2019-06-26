@@ -1,7 +1,7 @@
 package com.lee.rokhan.container.factory.impl;
 
 import com.lee.rokhan.container.instance.BeanInstance;
-import com.lee.rokhan.container.instance.impl.BeanInstances;
+import com.lee.rokhan.container.instance.BeanInstances;
 import com.lee.rokhan.container.pojo.BeanReference;
 import com.lee.rokhan.container.pojo.PropertyValue;
 import com.lee.rokhan.container.definition.BeanDefinition;
@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2019/6/17 11:38
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PACKAGE)
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
 public class IocBeanFactory implements BeanFactory, Closeable {
 
     // 考虑并发情况，默认256，防止扩容

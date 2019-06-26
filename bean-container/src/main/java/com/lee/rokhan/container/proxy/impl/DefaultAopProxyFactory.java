@@ -9,7 +9,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import java.util.List;
 
 /**
- * Aop动态代理
+ * Aop动态代理工厂类
  * 1、JDK动态代理
  * 2、Cglib动态代理
  * @author lichujun
@@ -18,8 +18,7 @@ import java.util.List;
 public class DefaultAopProxyFactory implements AopProxyFactory {
 
     @Override
-    public AopProxy createAopProxy(Object bean, String beanName, List<Advisor> matchAdvisors, BeanFactory beanFactory)
-            throws Throwable {
+    public AopProxy createAopProxy(Object bean, String beanName, List<Advisor> matchAdvisors, BeanFactory beanFactory) {
         if (shouldUseJDKDynamicProxy(bean, beanName)) {
             return new JdkDynamicAopProxy(beanName, bean, matchAdvisors, beanFactory);
         } else {

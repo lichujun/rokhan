@@ -6,19 +6,18 @@ import com.lee.rokhan.container.factory.BeanFactory;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import java.lang.reflect.Method;
 import java.util.Objects;
 
 /**
- * 通过工厂Bean的方法创建对象
+ * 通过Bean对象的方法创建Bean对象
  *
  * @author lichujun
  * @date 2019/6/17 14:58
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class FactoryBeanInstance extends IocMethodDetermine implements BeanInstance {
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
+public class FactoryBeanInstance extends IocDetermine implements BeanInstance {
 
     /**
      * 通过工厂Bean的方法创建对象

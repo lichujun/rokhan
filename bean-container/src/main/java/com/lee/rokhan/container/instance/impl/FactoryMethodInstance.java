@@ -16,8 +16,8 @@ import java.util.Objects;
  * @date 2019/6/17 14:57
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class FactoryMethodInstance extends IocMethodDetermine implements BeanInstance {
+@NoArgsConstructor(access = AccessLevel.PUBLIC)
+public class FactoryMethodInstance extends IocDetermine implements BeanInstance {
 
     /**
      * 通过静态工厂方法生成Bean对象

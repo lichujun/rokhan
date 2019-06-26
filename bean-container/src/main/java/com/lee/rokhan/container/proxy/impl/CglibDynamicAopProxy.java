@@ -5,38 +5,42 @@ import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.proxy.AopProxy;
 import com.lee.rokhan.container.utils.AopProxyUtils;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
 
 /**
+ * 通过Cglib生成代理对象
  * @author lichujun
  * @date 2019/6/19 15:30
  */
 @Slf4j
+@AllArgsConstructor
 public class CglibDynamicAopProxy implements AopProxy, MethodInterceptor {
 
     private static final Enhancer ENHANCER = new Enhancer();
 
+    /**
+     * Bean名称
+     */
     private final String beanName;
+    /**
+     * Bean对象
+     */
     private final Object target;
-
+    /**
+     * 匹配到的增强器
+     */
     private final List<Advisor> matchAdvisors;
-
+    /**
+     * Bean工厂
+     */
     private final BeanFactory beanFactory;
-
-    public CglibDynamicAopProxy(String beanName, Object target, List<Advisor> matchAdvisors, BeanFactory beanFactory) {
-        super();
-        this.beanName = beanName;
-        this.target = target;
-        this.matchAdvisors = matchAdvisors;
-        this.beanFactory = beanFactory;
-    }
 
     @Override
     public Object getProxy() throws Throwable {
