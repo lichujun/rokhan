@@ -5,10 +5,14 @@ import com.lee.rokhan.container.advice.MethodReturnAdvice;
 import com.lee.rokhan.container.advice.MethodSurroundAdvice;
 import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.advisor.impl.AspectJPointcutAdvisor;
+import com.lee.rokhan.container.context.impl.AnnotationApplicationContext;
 import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import com.lee.rokhan.container.processor.impl.AdvisorAutoProxyCreator;
+import com.lee.rokhan.demo.controller.DemoController;
+
+import java.lang.reflect.Method;
 import java.util.Collections;
 
 /**
@@ -18,7 +22,15 @@ import java.util.Collections;
 public class DemoServer {
 
     public static void main(String[] args) throws Throwable {
-        IocBeanDefinition iocBeanDefinition = new IocBeanDefinition();
+
+        AnnotationApplicationContext context = new AnnotationApplicationContext();
+        context.init();
+
+        DemoController demoController = (DemoController) context.getBean("demoController");
+        demoController.test();
+
+
+        /*IocBeanDefinition iocBeanDefinition = new IocBeanDefinition();
         iocBeanDefinition.setBeanClass(DemoServer.class);
 
         BeanFactory beanFactory = new IocBeanFactory();
@@ -35,7 +47,7 @@ public class DemoServer {
         beanFactory.registerBeanPostProcessor(new AdvisorAutoProxyCreator(Collections.singletonList(advisor), beanFactory));
         beanFactory.registerBeanDefinition("demo", iocBeanDefinition);
         DemoServer demoServer = (DemoServer) beanFactory.getBean("demo");
-        demoServer.doSomething();
+        demoServer.doSomething();*/
 
 
     }
