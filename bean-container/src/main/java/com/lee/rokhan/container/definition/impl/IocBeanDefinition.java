@@ -9,6 +9,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -98,6 +99,17 @@ public class IocBeanDefinition implements BeanDefinition {
             values[i++] = value;
         }
         return values;
+    }
+
+    /**
+     * 新增依赖关系
+     * @param propertyValue 依赖
+     */
+    public void addPropertyValue(PropertyValue propertyValue) {
+        if (propertyValues == null) {
+            propertyValues = new ArrayList<>();
+        }
+        propertyValues.add(propertyValue);
     }
 
     @Override

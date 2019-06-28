@@ -28,19 +28,11 @@
         <aspectJ.version>1.9.4</aspectJ.version>
         <maven.compile.version>2.3</maven.compile.version>
         <common.version>1.0-SNAPSHOT</common.version>
-        <yaml.version>1.23</yaml.version>
         <bean.container.version>1.0-SNAPSHOT</bean.container.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- https://mvnrepository.com/artifact/org.yaml/snakeyaml -->
-            <dependency>
-                <groupId>org.yaml</groupId>
-                <artifactId>snakeyaml</artifactId>
-                <version>${yaml.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>com.lee</groupId>
                 <artifactId>common</artifactId>

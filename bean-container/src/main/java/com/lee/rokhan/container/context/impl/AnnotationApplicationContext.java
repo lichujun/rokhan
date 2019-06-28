@@ -7,12 +7,16 @@ import com.lee.rokhan.container.constants.ApplicationContextConstants;
 import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.factory.impl.IocBeanFactory;
+import com.lee.rokhan.container.pojo.BeanReference;
+import com.lee.rokhan.container.pojo.PropertyValue;
 import com.lee.rokhan.container.resource.YamlResource;
 import com.lee.rokhan.container.resource.impl.YamlResourceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.*;
 
 /**
@@ -73,8 +77,28 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             }
             String beanName = getComponentName(clazz);
             if (StringUtils.isNotBlank(beanName)) {
+                Field[] fields = clazz.getDeclaredFields();
                 IocBeanDefinition iocBeanDefinition = new IocBeanDefinition();
                 iocBeanDefinition.setBeanClass(clazz);
+                if (ArrayUtils.isNotEmpty(fields)) {
+                    for (Field field : fields) {
+                        Autowired autowired = field.getDeclaredAnnotation(Autowired.class);
+                        if (autowired != null) {
+                            Class<?> fieldType = field.getType();
+                            /*if (fieldType.isInterface()) {
+                                fieldType
+                            }*/
+                            String propertyName = autowired.value();
+                            if (StringUtils.isBlank(propertyName)) {
+                                propertyName = StringUtils.uncapitalize(fieldType.getSimpleName());
+                            }
+                            BeanReference beanReference = new BeanReference(propertyName);
+                            PropertyValue propertyValue = new PropertyValue(field.getName(), beanReference);
+                            iocBeanDefinition.addPropertyValue(propertyValue);
+                        }
+                    }
+                }
+
                 registerBeanDefinition(beanName, iocBeanDefinition);
             }
 
