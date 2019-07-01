@@ -28,7 +28,15 @@ public interface BeanDefinition {
 
     Class<?> getBeanClass();
 
+    void setBeanClass(Class<?> beanClass);
+
+    Class<?> getTargetClass();
+
+    void setTargetClass(Class<?> targetClass);
+
     String getScope();
+
+    void setScope(String scope);
 
     boolean isSingleton();
 
@@ -36,13 +44,23 @@ public interface BeanDefinition {
 
     String getFactoryBeanName();
 
+    void setFactoryBeanName(String factoryBeanName);
+
     String getFactoryMethodName();
+
+    void setFactoryMethodName(String factoryMethodName);
 
     String getInitMethodName();
 
+    void setInitMethodName(String initMethodName);
+
     String getDestroyMethodName();
 
+    void setDestroyMethodName(String destroyMethodName);
+
     List<Object> getArgumentValues();
+
+    void setArgumentValues(List<Object> parameters);
 
     List<PropertyValue> getPropertyValues();
 
@@ -54,6 +72,8 @@ public interface BeanDefinition {
     Method getFactoryMethod();
 
     void setFactoryMethod(Method method);
+
+    void addPropertyValue(PropertyValue propertyValue);
 
     /**
      * 获取方法的参数对象列表

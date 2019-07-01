@@ -7,7 +7,6 @@ import com.lee.rokhan.container.pojo.PropertyValue;
 import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.processor.BeanPostProcessor;
-import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -21,23 +20,22 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Ioc实例工厂
- * 注：屏蔽构造函数，只能通过工厂方法生成对象
  *
  * @author lichujun
  * @date 2019/6/17 11:38
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor
 public class IocBeanFactory implements BeanFactory, Closeable {
 
     // 考虑并发情况，默认256，防止扩容
     private static final int DEFAULT_SIZE = 256;
     // 存放Bean注册信息的容器
-    private Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
+    protected final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
     // 存放Bean对象的容器
-    private Map<String, Object> beanMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
+    private final Map<String, Object> beanMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
     // 监听Bean的生命周期
-    private List<BeanPostProcessor> beanPostProcessors = Collections.synchronizedList(new ArrayList<>());
+    private final List<BeanPostProcessor> beanPostProcessors = Collections.synchronizedList(new ArrayList<>());
 
 
     @Override
@@ -131,7 +129,7 @@ public class IocBeanFactory implements BeanFactory, Closeable {
             return beanObject;
         }
         BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
-        Objects.requireNonNull(beanDefinition, "beanDefinition不能为空");
+        Objects.requireNonNull(beanDefinition, "Bean名称为" + beanName + "的beanDefinition为空");
 
         Class<?> beanClass = beanDefinition.getBeanClass();
         // 获取实例生成器

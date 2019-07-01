@@ -22,9 +22,14 @@ import java.util.List;
 public class IocBeanDefinition implements BeanDefinition {
 
     /**
-     * bean的类对象
+     * Bean的类对象
      */
     private Class<?> beanClass;
+
+    /**
+     * 实例化的类对象
+     */
+    private Class<?> targetClass;
 
     /**
      * scope类型
@@ -105,6 +110,7 @@ public class IocBeanDefinition implements BeanDefinition {
      * 新增依赖关系
      * @param propertyValue 依赖
      */
+    @Override
     public void addPropertyValue(PropertyValue propertyValue) {
         if (propertyValues == null) {
             propertyValues = new ArrayList<>();

@@ -1,6 +1,7 @@
 package com.lee.rokhan.demo.service.impl;
 
 import com.lee.rokhan.container.annotation.Autowired;
+import com.lee.rokhan.container.annotation.Bean;
 import com.lee.rokhan.container.annotation.Service;
 import com.lee.rokhan.demo.controller.DemoController;
 import com.lee.rokhan.demo.service.DemoService;
@@ -19,5 +20,10 @@ public class DemoServiceImpl implements DemoService {
     @Override
     public void test() {
         System.out.println("service");
+    }
+
+    @Bean("test")
+    public DemoService test1() {
+        return this;
     }
 }
