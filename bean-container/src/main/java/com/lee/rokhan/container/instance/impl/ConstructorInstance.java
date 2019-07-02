@@ -33,6 +33,7 @@ public class ConstructorInstance extends IocDetermine implements BeanInstance {
                 return beanDefinition.getBeanClass().newInstance();
             } else {
                 Constructor constructor = determineConstructor(beanDefinition, args);
+                constructor.setAccessible(true);
                 return constructor.newInstance(args);
             }
         } catch (SecurityException e) {

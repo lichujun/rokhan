@@ -31,7 +31,7 @@ public class IocBeanFactory implements BeanFactory, Closeable {
     // 考虑并发情况，默认256，防止扩容
     private static final int DEFAULT_SIZE = 256;
     // 存放Bean注册信息的容器
-    protected final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
+    private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
     // 存放Bean对象的容器
     private final Map<String, Object> beanMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
     // 监听Bean的生命周期

@@ -31,6 +31,7 @@ public class FactoryMethodInstance extends IocDetermine implements BeanInstance 
         Class<?> beanClass = beanDefinition.getBeanClass();
         Object[] args = beanDefinition.getArgumentRealValues(beanFactory);
         Method method = determineMethod(beanDefinition, args, beanClass);
+        method.setAccessible(true);
         return method.invoke(beanClass, args);
     }
 }

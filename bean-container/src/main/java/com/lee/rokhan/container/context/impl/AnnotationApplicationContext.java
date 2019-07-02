@@ -84,9 +84,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         // 1.注册BeanDefinition
         for (Class<?> clazz : classSet) {
             registerBeanDefinitionWithoutDI(clazz);
-        }
-        // 注册依赖关系
-        for (Class<?> clazz : classSet) {
+            // 注册依赖关系
             registerDI(clazz);
         }
     }
@@ -94,16 +92,13 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     @Override
     public List<String> getBeanNamesByType(Class<?> type) {
         if (MapUtils.isEmpty(typeToBeanNames)) {
-            for (Map.Entry<String, BeanDefinition> definitionEntry : beanDefinitionMap.entrySet()) {
-                // 获取Bean注册信息
-                BeanDefinition beanDefinition = Optional.ofNullable(definitionEntry)
-                        .map(Map.Entry::getValue)
-                        .orElse(null);
-                if (beanDefinition == null) {
+            for (Class<?> clazz : classSet) {
+                String beanName = getComponentName(clazz);
+                if (StringUtils.isBlank(beanName)) {
                     continue;
                 }
                 // 获取Bean对象实现的所有接口
-                Class<?>[] typeInterfaces = Optional.ofNullable(beanDefinition.getTargetClass())
+                Class<?>[] typeInterfaces = Optional.ofNullable(clazz)
                         .map(Class::getInterfaces)
                         .orElse(null);
                 if (typeInterfaces == null || ArrayUtils.isEmpty(typeInterfaces)) {
@@ -116,7 +111,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                         beanNames = new ArrayList<>();
                         typeToBeanNames.put(type, beanNames);
                     }
-                    beanNames.add(definitionEntry.getKey());
+                    beanNames.add(beanName);
                 }
             }
         }
@@ -138,7 +133,6 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         // 通过构造函数实例化Bean对象注册Bean信息
         BeanDefinition beanDefinition = new IocBeanDefinition();
         beanDefinition.setBeanClass(clazz);
-        beanDefinition.setTargetClass(clazz);
         Constructor[] constructors = clazz.getDeclaredConstructors();
         if (ArrayUtils.isNotEmpty(constructors)) {
             if (constructors.length > 1) {
@@ -149,6 +143,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             if (ArrayUtils.isNotEmpty(parameterTypes)) {
                 List<Object> parameters = getParameterDIValues(parameterTypes);
                 beanDefinition.setArgumentValues(parameters);
+                beanDefinition.setConstructor(constructor);
             }
         }
         // 注册Bean的信息
@@ -170,7 +165,6 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             if (Modifier.isStatic(method.getModifiers())) {
                 BeanDefinition factoryMethodBeanDefinition = new IocBeanDefinition();
                 factoryMethodBeanDefinition.setBeanClass(clazz);
-                factoryMethodBeanDefinition.setTargetClass(returnType);
                 factoryMethodBeanDefinition.setFactoryMethodName(method.getName());
                 registerBeanDefinition(beanValue, factoryMethodBeanDefinition);
             }
@@ -178,7 +172,6 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             else {
                 BeanDefinition methodBeanDefinition = new IocBeanDefinition();
                 methodBeanDefinition.setFactoryBeanName(beanName);
-                methodBeanDefinition.setTargetClass(returnType);
                 methodBeanDefinition.setFactoryMethodName(method.getName());
                 registerBeanDefinition(beanValue, methodBeanDefinition);
             }

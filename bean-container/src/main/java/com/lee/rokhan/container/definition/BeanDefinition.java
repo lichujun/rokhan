@@ -30,10 +30,6 @@ public interface BeanDefinition {
 
     void setBeanClass(Class<?> beanClass);
 
-    Class<?> getTargetClass();
-
-    void setTargetClass(Class<?> targetClass);
-
     String getScope();
 
     void setScope(String scope);

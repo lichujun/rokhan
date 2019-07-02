@@ -12,12 +12,12 @@ import com.lee.rokhan.demo.service.impl.DemoServiceImpl;
 @Controller
 public class DemoController {
 
-    @Autowired
+    //@Autowired
     private DemoService demoService;
 
-    /*DemoController(DemoService demoService) {
+    DemoController(DemoService demoService) {
         this.demoService = demoService;
-    }*/
+    }
 
     public void test() {
         demoService.test();
