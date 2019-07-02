@@ -30,10 +30,19 @@ public class IocBeanFactory implements BeanFactory, Closeable {
 
     // 考虑并发情况，默认256，防止扩容
     private static final int DEFAULT_SIZE = 256;
+
     // 存放Bean注册信息的容器
     private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
-    // 存放Bean对象的容器
-    private final Map<String, Object> beanMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
+
+    // 存放Bean对象的容器，一级缓存
+    private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
+
+    // Bean对象的二级缓存
+    private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
+
+    // 在创建中的Bean对象的名称
+    private final Set<String> singletonsCurrentlyInCreation = Collections.newSetFromMap(new ConcurrentHashMap<>(16));
+
     // 监听Bean的生命周期
     private final List<BeanPostProcessor> beanPostProcessors = Collections.synchronizedList(new ArrayList<>());
 
@@ -104,7 +113,7 @@ public class IocBeanFactory implements BeanFactory, Closeable {
             if (fieldValue == null) {
                 realFieldValue = null;
             }
-            //
+            // 进行依赖注入
             else if (fieldValue instanceof BeanReference) {
                 realFieldValue = doGetBean(((BeanReference) fieldValue).getBeanName());
             }
@@ -124,41 +133,48 @@ public class IocBeanFactory implements BeanFactory, Closeable {
      */
     private Object doGetBean(String beanName) throws Throwable {
         // 先从Bean对象容器里去取值，如果获取为空，则创建对象
-        Object beanObject = beanMap.get(beanName);
+        Object beanObject = singletonObjects.get(beanName);
         if (beanObject != null) {
             return beanObject;
         }
-        BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
-        Objects.requireNonNull(beanDefinition, "Bean名称为" + beanName + "的beanDefinition为空");
-
-        Class<?> beanClass = beanDefinition.getBeanClass();
-        // 获取实例生成器
-        BeanInstance beanInstance;
-        if (beanClass != null) {
-            if (StringUtils.isBlank(beanDefinition.getFactoryMethodName())) {
-                // 使用构造函数的实例生成器
-                beanInstance = BeanInstances.getConstructorInstance();
-            } else {
-                // 使用工厂方法的实例生成器
-                beanInstance = BeanInstances.getFactoryMethodInstance();
-            }
-        } else {
-            // 使用工厂Bean的实例生成器
-            beanInstance = BeanInstances.getFactoryBeanInstance();
+        if (singletonsCurrentlyInCreation.contains(beanName)) {
+            beanObject = earlySingletonObjects.get(beanName);
         }
-        // 实例化对象
-        beanObject = beanInstance.instance(beanDefinition, this);
-        // 进行依赖注入
-        setPropertyDIValues(beanDefinition, beanObject);
-        // 初始化对象之前处理
-        beanObject = applyPostProcessBeforeInitialization(beanObject, beanName);
-        // 对象初始化
-        doInit(beanObject, beanDefinition);
-        // 初始化对象之后的处理
-        beanObject = applyPostProcessAfterInitialization(beanObject, beanName);
+        BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
+        if (beanObject == null) {
+            Objects.requireNonNull(beanDefinition, "Bean名称为" + beanName + "的beanDefinition为空");
+
+            Class<?> beanClass = beanDefinition.getBeanClass();
+            // 获取实例生成器
+            BeanInstance beanInstance;
+            if (beanClass != null) {
+                if (StringUtils.isBlank(beanDefinition.getFactoryMethodName())) {
+                    // 使用构造函数的实例生成器
+                    beanInstance = BeanInstances.getConstructorInstance();
+                } else {
+                    // 使用工厂方法的实例生成器
+                    beanInstance = BeanInstances.getFactoryMethodInstance();
+                }
+            } else {
+                // 使用工厂Bean的实例生成器
+                beanInstance = BeanInstances.getFactoryBeanInstance();
+            }
+            // 实例化对象
+            beanObject = beanInstance.instance(beanDefinition, this);
+            singletonsCurrentlyInCreation.add(beanName);
+            earlySingletonObjects.put(beanName, beanObject);
+            // 进行依赖注入
+            setPropertyDIValues(beanDefinition, beanObject);
+            // 初始化对象之前处理
+            beanObject = applyPostProcessBeforeInitialization(beanObject, beanName);
+            // 对象初始化
+            doInit(beanObject, beanDefinition);
+            // 初始化对象之后的处理
+            beanObject = applyPostProcessAfterInitialization(beanObject, beanName);
+        }
         // 如果是单例模式，则缓存到Map容器
         if (beanDefinition.isSingleton()) {
-            beanMap.put(beanName, beanObject);
+            singletonObjects.put(beanName, beanObject);
         }
         return beanObject;
     }
@@ -188,7 +204,7 @@ public class IocBeanFactory implements BeanFactory, Closeable {
             String beanName = entry.getKey();
             BeanDefinition beanDefinition = entry.getValue();
             if (beanDefinition.isSingleton() && StringUtils.isNotBlank(beanDefinition.getDestroyMethodName())) {
-                Object instance = this.beanMap.get(beanName);
+                Object instance = this.singletonObjects.get(beanName);
                 try {
                     Method method = instance.getClass().getDeclaredMethod(beanDefinition.getDestroyMethodName());
                     method.invoke(instance);

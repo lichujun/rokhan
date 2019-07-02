@@ -11,6 +11,7 @@ import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import com.lee.rokhan.container.processor.impl.AdvisorAutoProxyCreator;
 import com.lee.rokhan.demo.controller.DemoController;
+import com.lee.rokhan.demo.service.impl.DemoServiceImpl;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -28,6 +29,9 @@ public class DemoServer {
 
         DemoController demoController = (DemoController) context.getBean("demoController");
         demoController.test();
+
+        DemoServiceImpl demoService = (DemoServiceImpl) context.getBean("demoServiceImpl");
+        demoService.test1();
 
 
         /*IocBeanDefinition iocBeanDefinition = new IocBeanDefinition();

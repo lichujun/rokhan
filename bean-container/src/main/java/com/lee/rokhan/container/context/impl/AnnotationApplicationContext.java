@@ -17,6 +17,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -93,12 +95,15 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     public List<String> getBeanNamesByType(Class<?> type) {
         if (MapUtils.isEmpty(typeToBeanNames)) {
             for (Class<?> clazz : classSet) {
+                if (clazz == null) {
+                    continue;
+                }
                 String beanName = getComponentName(clazz);
                 if (StringUtils.isBlank(beanName)) {
                     continue;
                 }
                 // 获取Bean对象实现的所有接口
-                Class<?>[] typeInterfaces = Optional.ofNullable(clazz)
+                Class<?>[] typeInterfaces = Optional.of(clazz)
                         .map(Class::getInterfaces)
                         .orElse(null);
                 if (typeInterfaces == null || ArrayUtils.isEmpty(typeInterfaces)) {
@@ -153,27 +158,46 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
             Bean bean = method.getDeclaredAnnotation(Bean.class);
-            if (bean == null) {
-                continue;
-            }
-            Class<?> returnType = method.getReturnType();
-            String beanValue = bean.value();
-            if (StringUtils.isBlank(beanValue)) {
-                beanValue = StringUtils.uncapitalize(returnType.getSimpleName());
-            }
-            // 静态工厂方法注册Bean信息
-            if (Modifier.isStatic(method.getModifiers())) {
-                BeanDefinition factoryMethodBeanDefinition = new IocBeanDefinition();
-                factoryMethodBeanDefinition.setBeanClass(clazz);
-                factoryMethodBeanDefinition.setFactoryMethodName(method.getName());
-                registerBeanDefinition(beanValue, factoryMethodBeanDefinition);
-            }
-            // 工厂Bean的方法注册Bean信息
-            else {
+            if (bean != null) {
+                Class<?> returnType = method.getReturnType();
+                String beanValue = bean.value();
+                if (StringUtils.isBlank(beanValue)) {
+                    beanValue = StringUtils.uncapitalize(returnType.getSimpleName());
+                }
                 BeanDefinition methodBeanDefinition = new IocBeanDefinition();
-                methodBeanDefinition.setFactoryBeanName(beanName);
-                methodBeanDefinition.setFactoryMethodName(method.getName());
+                // 静态工厂方法注册Bean信息
+                if (Modifier.isStatic(method.getModifiers())) {
+                    methodBeanDefinition.setBeanClass(clazz);
+                    methodBeanDefinition.setFactoryMethodName(method.getName());
+                }
+                // 工厂Bean的方法注册Bean信息
+                else {
+                    methodBeanDefinition.setFactoryBeanName(beanName);
+                    methodBeanDefinition.setFactoryMethodName(method.getName());
+                }
+                String initMethod = bean.initMethod();
+                String destroyMethod = bean.destroyMethod();
+                if (StringUtils.isNotBlank(initMethod)) {
+                    methodBeanDefinition.setInitMethodName(initMethod);
+                }
+                if (StringUtils.isNotBlank(destroyMethod)) {
+                    methodBeanDefinition.setDestroyMethodName(destroyMethod);
+                }
                 registerBeanDefinition(beanValue, methodBeanDefinition);
+            }
+            PostConstruct postConstruct = method.getDeclaredAnnotation(PostConstruct.class);
+            if (postConstruct != null) {
+                if (ArrayUtils.isNotEmpty(method.getParameterTypes())) {
+                    throw new RuntimeException("初始化方法参数列表需要为空");
+                }
+                beanDefinition.setInitMethodName(method.getName());
+            }
+            PreDestroy preDestroy = method.getDeclaredAnnotation(PreDestroy.class);
+            if (preDestroy != null) {
+                if (ArrayUtils.isNotEmpty(method.getParameterTypes())) {
+                    throw new RuntimeException("销毁方法参数列表需要为空");
+                }
+                beanDefinition.setDestroyMethodName(method.getName());
             }
         }
     }
@@ -208,6 +232,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 }
             }
         }
+        // Bean对象的方法或静态方法注册参数依赖关系
         Method[] methods = clazz.getDeclaredMethods();
         if (ArrayUtils.isNotEmpty(methods)) {
             for (Method method : methods) {

@@ -13,8 +13,8 @@ import com.lee.rokhan.demo.service.DemoService;
 @Service
 public class DemoServiceImpl implements DemoService {
 
-    /*@Autowired
-    private DemoController demoController;*/
+    @Autowired
+    private DemoController demoController;
 
 
     @Override
@@ -22,8 +22,12 @@ public class DemoServiceImpl implements DemoService {
         System.out.println("service");
     }
 
+    public void test1() {
+        demoController.test1();
+    }
+
     @Bean("test")
-    public DemoService test1() {
+    public DemoService test2() {
         return this;
     }
 }
