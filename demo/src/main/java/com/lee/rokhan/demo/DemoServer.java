@@ -30,8 +30,8 @@ public class DemoServer {
         DemoController demoController = (DemoController) context.getBean("demoController");
         demoController.test();
 
-        DemoServiceImpl demoService = (DemoServiceImpl) context.getBean("demoServiceImpl");
-        demoService.test1();
+        /*DemoServiceImpl demoService = (DemoServiceImpl) context.getBean("demoServiceImpl");
+        demoService.test1();*/
 
 
         /*IocBeanDefinition iocBeanDefinition = new IocBeanDefinition();

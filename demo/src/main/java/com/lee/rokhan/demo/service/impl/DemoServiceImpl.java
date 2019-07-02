@@ -13,7 +13,7 @@ import com.lee.rokhan.demo.service.DemoService;
 @Service
 public class DemoServiceImpl implements DemoService {
 
-    @Autowired
+    //@Autowired
     private DemoController demoController;
 
 
@@ -26,7 +26,7 @@ public class DemoServiceImpl implements DemoService {
         demoController.test1();
     }
 
-    @Bean("test")
+    @Bean(value = "test", initMethod = "test")
     public DemoService test2() {
         return this;
     }

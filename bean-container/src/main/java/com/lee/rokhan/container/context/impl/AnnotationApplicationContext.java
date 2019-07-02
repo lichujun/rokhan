@@ -1,8 +1,12 @@
 package com.lee.rokhan.container.context.impl;
 
 import com.alibaba.fastjson.JSONArray;
+import com.lee.rokhan.common.utils.ReflectionUtils;
 import com.lee.rokhan.common.utils.ScanUtils;
+import com.lee.rokhan.container.advisor.Advisor;
+import com.lee.rokhan.container.advisor.impl.AspectJPointcutAdvisor;
 import com.lee.rokhan.container.annotation.*;
+import com.lee.rokhan.container.annotation.Component;
 import com.lee.rokhan.container.constants.ApplicationContextConstants;
 import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.definition.BeanDefinition;
@@ -10,6 +14,7 @@ import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import com.lee.rokhan.container.pojo.BeanReference;
 import com.lee.rokhan.container.pojo.PropertyValue;
+import com.lee.rokhan.container.processor.impl.AdvisorAutoProxyCreator;
 import com.lee.rokhan.container.resource.YamlResource;
 import com.lee.rokhan.container.resource.impl.YamlResourceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +30,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.List;
 
 /**
  * Bean容器
@@ -83,12 +89,20 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         if (CollectionUtils.isEmpty(classSet)) {
             return;
         }
-        // 1.注册BeanDefinition
+        List<Advisor> advisors = new ArrayList<>();
         for (Class<?> clazz : classSet) {
+            String beanName = getComponentName(clazz);
+            if (StringUtils.isBlank(beanName)) {
+                continue;
+            }
+            // 注册未进行依赖注入的BeanDefinition
             registerBeanDefinitionWithoutDI(clazz);
             // 注册依赖关系
             registerDI(clazz);
+            // 添加Advisor增强器，进行方法增强
+            addAdvisors(clazz, advisors, beanName);
         }
+        registerBeanPostProcessor(new AdvisorAutoProxyCreator(advisors, this));
     }
 
     @Override
@@ -175,6 +189,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                     methodBeanDefinition.setFactoryBeanName(beanName);
                     methodBeanDefinition.setFactoryMethodName(method.getName());
                 }
+                // 注册init方法和destroy方法
                 String initMethod = bean.initMethod();
                 String destroyMethod = bean.destroyMethod();
                 if (StringUtils.isNotBlank(initMethod)) {
@@ -185,20 +200,89 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 }
                 registerBeanDefinition(beanValue, methodBeanDefinition);
             }
-            PostConstruct postConstruct = method.getDeclaredAnnotation(PostConstruct.class);
-            if (postConstruct != null) {
-                if (ArrayUtils.isNotEmpty(method.getParameterTypes())) {
-                    throw new RuntimeException("初始化方法参数列表需要为空");
+            // 注册init方法和destroy方法
+            registerInitAndDestroy(beanDefinition, method);
+        }
+    }
+
+    /**
+     * 添加Advisor增强器
+     * @param clazz 类对象
+     * @param advisors Advisor增强器集合
+     */
+    private void addAdvisors(Class<?> clazz, List<Advisor> advisors, String beanName) {
+        Aspect aspect = clazz.getDeclaredAnnotation(Aspect.class);
+        if (aspect == null) {
+            return;
+        }
+        Set<Method> methods = ReflectionUtils.getDeclaredMethods(clazz);
+        if (CollectionUtils.isEmpty(methods)) {
+            return;
+        }
+        // 获取所有切点
+        Map<String, String> pointcutMap = null;
+        for (Method method : methods) {
+            Pointcut pointcut = method.getDeclaredAnnotation(Pointcut.class);
+            if (pointcut != null) {
+                String expression = pointcut.value();
+                if (StringUtils.isNotBlank(expression)) {
+                    String pointcutName = method.getName() + "()";
+                    if (pointcutMap == null) {
+                        pointcutMap = new HashMap<>();
+                    }
+                    pointcutMap.put(pointcutName, expression);
                 }
-                beanDefinition.setInitMethodName(method.getName());
             }
-            PreDestroy preDestroy = method.getDeclaredAnnotation(PreDestroy.class);
-            if (preDestroy != null) {
-                if (ArrayUtils.isNotEmpty(method.getParameterTypes())) {
-                    throw new RuntimeException("销毁方法参数列表需要为空");
-                }
-                beanDefinition.setDestroyMethodName(method.getName());
+        }
+        if (MapUtils.isEmpty(pointcutMap)) {
+            return;
+        }
+        // 进行方法增强
+        for (Method method : methods) {
+            Before before = method.getDeclaredAnnotation(Before.class);
+            After after = method.getDeclaredAnnotation(After.class);
+            Around around = method.getDeclaredAnnotation(Around.class);
+            PropertyValue propertyValue = null;
+            if (before != null) {
+                propertyValue = new PropertyValue(before.value(), before);
+            } else if (after != null) {
+                propertyValue = new PropertyValue(after.value(), after);
+            } else if (around != null) {
+                propertyValue = new PropertyValue(around.value(), around);
             }
+            if (propertyValue != null) {
+                String pointcutName = propertyValue.getName();
+                String expression = pointcutMap.get(pointcutName);
+                String adviceBeanName = pointcutName + propertyValue.getValue().getClass().getSimpleName();
+                Advisor advisor = new AspectJPointcutAdvisor(adviceBeanName, expression);
+                advisors.add(advisor);
+                BeanDefinition beanDefinition = new IocBeanDefinition();
+                beanDefinition.setFactoryBeanName(beanName);
+                beanDefinition.setFactoryMethodName(method.getName());
+                registerBeanDefinition(adviceBeanName, beanDefinition);
+            }
+        }
+    }
+
+    /**
+     * 注册init方法和destroy方法
+     * @param beanDefinition Bean注册信息
+     * @param method 方法
+     */
+    private void registerInitAndDestroy(BeanDefinition beanDefinition, Method method) {
+        PostConstruct postConstruct = method.getDeclaredAnnotation(PostConstruct.class);
+        if (postConstruct != null) {
+            if (ArrayUtils.isNotEmpty(method.getParameterTypes())) {
+                throw new RuntimeException("初始化方法参数列表需要为空");
+            }
+            beanDefinition.setInitMethodName(method.getName());
+        }
+        PreDestroy preDestroy = method.getDeclaredAnnotation(PreDestroy.class);
+        if (preDestroy != null) {
+            if (ArrayUtils.isNotEmpty(method.getParameterTypes())) {
+                throw new RuntimeException("销毁方法参数列表需要为空");
+            }
+            beanDefinition.setDestroyMethodName(method.getName());
         }
     }
 

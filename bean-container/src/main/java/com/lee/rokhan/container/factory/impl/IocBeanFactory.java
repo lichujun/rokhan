@@ -40,9 +40,6 @@ public class IocBeanFactory implements BeanFactory, Closeable {
     // Bean对象的二级缓存
     private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
 
-    // 在创建中的Bean对象的名称
-    private final Set<String> singletonsCurrentlyInCreation = Collections.newSetFromMap(new ConcurrentHashMap<>(16));
-
     // 监听Bean的生命周期
     private final List<BeanPostProcessor> beanPostProcessors = Collections.synchronizedList(new ArrayList<>());
 
@@ -137,13 +134,11 @@ public class IocBeanFactory implements BeanFactory, Closeable {
         if (beanObject != null) {
             return beanObject;
         }
-        if (singletonsCurrentlyInCreation.contains(beanName)) {
-            beanObject = earlySingletonObjects.get(beanName);
-        }
         BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
-        if (beanObject == null) {
+        if (earlySingletonObjects.keySet().contains(beanName)) {
+            beanObject = earlySingletonObjects.get(beanName);
+        } else {
             Objects.requireNonNull(beanDefinition, "Bean名称为" + beanName + "的beanDefinition为空");
-
             Class<?> beanClass = beanDefinition.getBeanClass();
             // 获取实例生成器
             BeanInstance beanInstance;
@@ -161,7 +156,6 @@ public class IocBeanFactory implements BeanFactory, Closeable {
             }
             // 实例化对象
             beanObject = beanInstance.instance(beanDefinition, this);
-            singletonsCurrentlyInCreation.add(beanName);
             earlySingletonObjects.put(beanName, beanObject);
             // 进行依赖注入
             setPropertyDIValues(beanDefinition, beanObject);
@@ -172,6 +166,7 @@ public class IocBeanFactory implements BeanFactory, Closeable {
             // 初始化对象之后的处理
             beanObject = applyPostProcessAfterInitialization(beanObject, beanName);
         }
+
         // 如果是单例模式，则缓存到Map容器
         if (beanDefinition.isSingleton()) {
             singletonObjects.put(beanName, beanObject);
