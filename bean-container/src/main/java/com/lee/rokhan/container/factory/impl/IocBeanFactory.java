@@ -122,7 +122,7 @@ public class IocBeanFactory implements BeanFactory, Closeable {
     }
 
     /**
-     * 生成Bean对象，不进行依赖注入
+     * 生成Bean对象
      * @param beanName Bean名称
      * @return Bean对象
      * @throws Throwable 异常
