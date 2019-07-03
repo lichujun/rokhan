@@ -32,12 +32,12 @@ public class IocBeanDefinition implements BeanDefinition {
     private String scope = BeanDefinition.SCOPE_SINGLETON;
 
     /**
-     * 工厂Bean名称
+     * 工厂Bean名称，用于通过方法或静态方法实例化对象
      */
     private String factoryBeanName;
 
     /**
-     * 工厂方法名称
+     * 工厂方法名称，用于通过方法或静态方法实例化对象
      */
     private String factoryMethodName;
 
@@ -52,7 +52,7 @@ public class IocBeanDefinition implements BeanDefinition {
     private String destroyMethodName;
 
     /**
-     * 构造函数的参数对象列表
+     * 构造方法、静态方法或Bean对象方法的参数对象列表
      */
     private List<Object> argumentValues;
 

@@ -1,7 +1,7 @@
 package com.lee.rokhan.container.instance;
 
 import com.lee.rokhan.container.instance.impl.ConstructorInstance;
-import com.lee.rokhan.container.instance.impl.FactoryBeanInstance;
+import com.lee.rokhan.container.instance.impl.FactoryBeanMethodInstance;
 import com.lee.rokhan.container.instance.impl.FactoryMethodInstance;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -52,7 +52,7 @@ public class BeanInstances {
         /**
          * 工厂Bean的实例生成器
          */
-        FACTORY_BEAN_INSTANCE(new FactoryBeanInstance()),
+        FACTORY_BEAN_INSTANCE(new FactoryBeanMethodInstance()),
         /**
          * 工厂方法的实例生成器
          */
