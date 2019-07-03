@@ -1,7 +1,7 @@
 
-# rokhan
-##### 一、IoC容器：
-###### （1）定义BeanDefinition接口，用于描述Bean信息。实现BeanDefinition接口创建IocBeanDefinition类，用来存储Bean信息，方便实例化Bean对象和进行依赖注入。所有Bean对象的生成都是通过BeanDefinition创建。Bean的定义信息有如下的属性：
+# ***rokhan***
+##### 一、***IoC***容器：
+###### （1）定义***BeanDefinition***接口，用于描述Bean信息。实现***BeanDefinition***接口创建***IocBeanDefinition***类，用来存储***Bean***信息，方便实例化***Bean***对象和进行依赖注入。所有Bean对象的生成都是通过BeanDefinition创建。***Bean***的定义信息有如下的属性：
 ~~~
     /**
      * Bean的类对象
@@ -55,7 +55,7 @@
      */
     private Method factoryMethod;
 ~~~
-###### （2）定义BeanFactory接口，用于对Bean对象的创建和获取。实现BeanFactory接口创建IocBeanFactory类，用来管理所有Bean对象。当出现循环依赖的时候，使用二级缓存解决此问题，二级缓存里存放的是刚实例化的对象（没有进行依赖注入和初始化）。
+###### （2）定义***BeanFactory***接口，用于对***Bean***对象的创建和获取。实现***BeanFactory***接口创建***IocBeanFactory***类，用来管理所有***Bean***对象。当出现循环依赖的时候，使用二级缓存解决此问题，二级缓存里存放的是刚实例化的对象（没有进行依赖注入和初始化）。
 - 定义二级缓存容器：
 ~~~
 // 存放Bean对象的容器，一级缓存
@@ -64,7 +64,7 @@ private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(DEF
 // Bean对象的二级缓存
 private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
 ~~~
-- 在依赖注入获取Bean对象的过程中，先在Bean对象容器（一级缓存）查找Bean对象，如果没有则去二级缓存查找Bean对象。当Bean对象实例化后将该对象放入到二级缓存中：
+- 在依赖注入获取***Bean***对象的过程中，先在Bean对象容器（一级缓存）查找***Bean***对象，如果没有则去二级缓存查找Bean对象。当***Bean***对象实例化后将该对象放入到二级缓存中：
 ~~~
     private Object doGetBean(String beanName) throws Throwable {
         // 先从Bean对象容器里去取值，如果获取为空，则创建对象
@@ -144,7 +144,7 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
         return method.invoke(beanClass, args);
     }
 ~~~
-- 通过Bean对象的方法实例化对象
+- 通过***Bean***对象的方法实例化对象
 ~~~
     @Override
     public Object instance(BeanDefinition beanDefinition, BeanFactory beanFactory) throws Throwable {
@@ -163,7 +163,7 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
         return method.invoke(factoryBean, args);
     }
 ~~~
-###### （4）BeanReference类，用于存储Bean的名称，用于描述一个Bean。
+###### （4）***BeanReference***类，用于存储***Bean***的名称，用于描述一个***Bean***。
 ~~~
     @Getter
     @AllArgsConstructor
@@ -175,7 +175,7 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
         private final String beanName;
     }
 ~~~
-###### （5）PropertyValue类，存储Bean对象的成员变量的名称和需要注入的对象，可用于描述Bean对象的依赖。如果是BeanReference对象，则在BeanFactory创建和获取这个对象。
+###### （5）***PropertyValue***类，存储***Bean***对象的成员变量的名称和需要注入的对象，可用于描述***Bean***对象的依赖。如果是***BeanReference***对象，则在***BeanFactory***创建和获取这个对象。
 ~~~
     @Getter
     @AllArgsConstructor
@@ -191,8 +191,8 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
         private final Object value;
     }
 ~~~
-##### 二、AOP方法增强
-###### （1）定义Advice接口，用于方法通知。定义了三种通知接口：1.前置通知：MethodBeforeAdvice。2.后置通知MethodReturnAdvice。3.环绕通知：MethodSurroundAdvice。
+##### 二、***AOP***方法增强
+###### （1）定义***Advice***接口，用于方法通知。定义了三种通知接口：1.前置通知：***MethodBeforeAdvice***。2.后置通知***MethodReturnAdvice***。3.环绕通知：***MethodSurroundAdvice***。
 - 前置通知接口
 ~~~
     public interface MethodBeforeAdvice extends Advice {
@@ -234,8 +234,8 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
         Object invoke(Method method, Object[] args, Object target) throws Throwable;
     }
 ~~~
-###### （2）定义Pointcut接口，描述一个切点。实现一个支持AspectJ表达式的切点的类AspectJExpressionPointcut,通过AspectJ表达式匹配类和方法。
-- Pointcut接口
+###### （2）定义***Pointcut***接口，描述一个切点。实现一个支持***AspectJ***表达式的切点的类***AspectJExpressionPointcut***,通过***AspectJ***表达式匹配类和方法。
+- ***Pointcut***接口
 ~~~
     public interface Pointcut {
 
@@ -254,7 +254,7 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
         boolean matchMethod(Method targetMethod);
     }
 ~~~
-- AspectJ表达式实现Advisor增强器
+- ***AspectJ***表达式实现***Advisor***增强器
 ~~~
     public class AspectJExpressionPointcut implements Pointcut {
 
@@ -285,7 +285,7 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
 
     }
 ~~~
-###### （3）定义Advisor接口，可以理解成增强器，有三个重要成员变量：1.一个通知（Advice）的Bean名称。2.AspectJ表达式。3.切点。
+###### （3）定义***Advisor***接口，可以理解成增强器，有三个重要成员变量：1.一个通知（***Advice***）的***Bean***名称。2.***AspectJ***表达式。3.切点。
 ~~~
     @Getter
     public class AspectJPointcutAdvisor implements Advisor {
@@ -304,8 +304,8 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
         }
     }
 ~~~
-###### （4）定义BeanPostProcessor接口，用于Bean对象初始化之前或者之后所需要做的操作。AOP方法增强就是通过实现该接口，即AdvisorAutoProxyCreator类。
-- Bean对象初始化后做方法增强
+###### （4）定义***BeanPostProcessor***接口，用于***Bean***对象初始化之前或者之后所需要做的操作。***AOP***方法增强就是通过实现该接口，即***AdvisorAutoProxyCreator***类。
+- ***Bean***对象初始化后做方法增强
 ~~~
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws Throwable {
@@ -351,8 +351,8 @@ private Object createProxy(Object bean, String beanName, List<Advisor> matchAdvi
                 .getProxy();
     }
 ~~~
-###### （5）定义AopProxy接口，具体有两个实现，一个是JDK动态代理JdkDynamicAopProxy，一个是Cglib动态代理CglibDynamicAopProxy，通过动态代理对方法增强。再定义一个动态代理工厂类DefaultAopProxyFactory，如果进行依赖注入的时候，存在成员变量的类型是类而不是接口的话，就使用Cglib进行动态代理，除此之外使用JDK动态代理。
-- JDK动态代理
+###### （5）定义***AopProxy***接口，具体有两个实现，一个是***JDK***动态代理***JdkDynamicAopProxy***，一个是***Cglib***动态代理***CglibDynamicAopProxy***，通过动态代理对方法增强。再定义一个动态代理工厂类***DefaultAopProxyFactory***，如果进行依赖注入的时候，存在成员变量的类型是类而不是接口的话，就使用Cglib进行动态代理，除此之外使用***JDK***动态代理。
+- ***JDK***动态代理
 ~~~
     @Slf4j
     @AllArgsConstructor
@@ -394,7 +394,7 @@ private Object createProxy(Object bean, String beanName, List<Advisor> matchAdvi
         }
     }
 ~~~
-- Cglib动态代理
+- ***Cglib***动态代理
 ~~~
     @Slf4j
     @AllArgsConstructor
@@ -454,7 +454,7 @@ private Object createProxy(Object bean, String beanName, List<Advisor> matchAdvi
 
     }
  ~~~
- - 动态代理工厂类，如果有成员变量的类型是类而不是接口的时候，调用*addClassBeanName*方法，方便选择合适的动态代理
+ - 动态代理工厂类，如果有成员变量的类型是类而不是接口的时候，调用***addClassBeanName***方法，选择合适的动态代理
  ~~~
      public class DefaultAopProxyFactory implements AopProxyFactory {
 
