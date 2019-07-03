@@ -2,6 +2,8 @@ package com.lee.rokhan.common.utils;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -42,6 +44,9 @@ public abstract class ReflectionUtils {
         Set<Method> methodSet = new LinkedHashSet<>();
         Set<MethodSignature> methodSignatureSet = new HashSet<>();
         for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
+            if (clazz == null) {
+                break;
+            }
             for (Method method : clazz.getDeclaredMethods()) {
                 MethodSignature methodSignature = new MethodSignature(method.getName(), method.getParameterTypes());
                 if (methodSignatureSet.add(methodSignature)) {
@@ -104,6 +109,9 @@ public abstract class ReflectionUtils {
         Set<Field> fieldSet = new LinkedHashSet<>();
         Set<String> fieldNameSet = new HashSet<>();
         for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
+            if (clazz == null) {
+                break;
+            }
             for (Field field : clazz.getDeclaredFields()) {
                 if (fieldNameSet.add(field.getName())) {
                     fieldSet.add(field);
@@ -111,6 +119,30 @@ public abstract class ReflectionUtils {
             }
         }
         return fieldSet;
+    }
+
+
+    /**
+     * 获取实现的所有接口
+     * @param clazz 子类的类对象
+     * @return 子类和所有父类实现的所有接口
+     */
+    public static Set<Class<?>> getInterfaces(Class<?> clazz) {
+        if (clazz == null) {
+            return Collections.emptySortedSet();
+        }
+        Set<Class<?>> interfaceSet = new LinkedHashSet<>();
+        for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
+            if (clazz == null) {
+                break;
+            }
+            Class<?>[] interfaceArr = clazz.getInterfaces();
+            if (ArrayUtils.isEmpty(interfaceArr)) {
+                continue;
+            }
+            interfaceSet.addAll(Arrays.asList(interfaceArr));
+        }
+        return interfaceSet;
     }
 
     /**
@@ -182,6 +214,9 @@ public abstract class ReflectionUtils {
         Field field;
         Class<?> clazz = object.getClass();
         for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
+            if (clazz == null) {
+                break;
+            }
             try {
                 field = clazz.getDeclaredField(fieldName);
                 return field;

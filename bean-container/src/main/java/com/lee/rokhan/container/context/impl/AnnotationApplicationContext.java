@@ -173,10 +173,10 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                     continue;
                 }
                 // 获取Bean对象实现的所有接口
-                Class<?>[] typeInterfaces = Optional.of(clazz)
-                        .map(Class::getInterfaces)
+                Set<Class<?>> typeInterfaces = Optional.of(clazz)
+                        .map(ReflectionUtils::getInterfaces)
                         .orElse(null);
-                if (typeInterfaces == null || ArrayUtils.isEmpty(typeInterfaces)) {
+                if (typeInterfaces == null || CollectionUtils.isEmpty(typeInterfaces)) {
                     continue;
                 }
                 // 将接口和它的所有实现注册到容器中

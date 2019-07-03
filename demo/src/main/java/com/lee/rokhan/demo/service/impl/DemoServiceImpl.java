@@ -11,16 +11,13 @@ import com.lee.rokhan.demo.service.DemoService;
  * @date 2019/6/28 17:29
  */
 @Service
-public class DemoServiceImpl implements DemoService {
+public class DemoServiceImpl extends DemoServiceBaseImpl {
 
     @Autowired
     private DemoController demoController;
 
 
-    @Override
-    public void test() {
-        System.out.println("service");
-    }
+
 
     public void test1() {
         demoController.test1();
