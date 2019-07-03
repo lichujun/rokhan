@@ -29,7 +29,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
@@ -69,7 +68,6 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      *
      * @throws IOException 扫描class文件IO异常
      */
-    @SuppressWarnings("unchecked")
     public AnnotationApplicationContext() throws IOException {
         yamlResource = new YamlResourceImpl();
         // 获取需要扫描的包
@@ -77,7 +75,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
 
         // 如果扫描的包为空，则classSet设为空集合
         if (scanPackages == null || scanPackages.isEmpty()) {
-            classSet = Collections.EMPTY_SET;
+            classSet = null;
         }
         // 如果扫描的包不为空，则扫描出所有class
         else {
@@ -297,25 +295,28 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             Before before = method.getDeclaredAnnotation(Before.class);
             After after = method.getDeclaredAnnotation(After.class);
             Around around = method.getDeclaredAnnotation(Around.class);
-            PropertyValue propertyValue = null;
+            String pointcutName = null;
+            String adviceType = null;
             Class<?> returnType = method.getReturnType();
             if (before != null) {
                 if (returnType == MethodBeforeAdvice.class) {
-                    propertyValue = new PropertyValue(before.value(), before);
+                    pointcutName = before.value();
+                    adviceType = Before.class.getSimpleName();
                 }
             } else if (after != null) {
                 if (returnType == MethodReturnAdvice.class) {
-                    propertyValue = new PropertyValue(after.value(), after);
+                    pointcutName = after.value();
+                    adviceType = After.class.getSimpleName();
                 }
             } else if (around != null) {
                 if (returnType == MethodSurroundAdvice.class) {
-                    propertyValue = new PropertyValue(around.value(), around);
+                    pointcutName = around.value();
+                    adviceType = Around.class.getSimpleName();
                 }
             }
-            if (propertyValue != null) {
-                String pointcutName = propertyValue.getName();
+            if (adviceType != null) {
                 String expression = pointcutMap.get(pointcutName);
-                String adviceBeanName = pointcutName + propertyValue.getValue().getClass().getSimpleName();
+                String adviceBeanName = pointcutName + adviceType;
                 Advisor advisor = new AspectJPointcutAdvisor(adviceBeanName, expression);
                 advisors.add(advisor);
                 BeanDefinition beanDefinition = new IocBeanDefinition();
