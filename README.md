@@ -64,7 +64,7 @@ private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(DEF
 // Bean对象的二级缓存
 private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
 ~~~
-- 在依赖注入获取***Bean***对象的过程中，先在Bean对象容器（一级缓存）查找***Bean***对象，如果没有则去二级缓存查找Bean对象。当***Bean***对象实例化后将该对象放入到二级缓存中：
+- 在依赖注入获取***Bean***对象的过程中，先在Bean对象容器（一级缓存）查找***Bean***对象，如果没有则去二级缓存查找***Bean***对象。当***Bean***对象实例化后将该对象放入到二级缓存中：
 ~~~
     private Object doGetBean(String beanName) throws Throwable {
         // 先从Bean对象容器里去取值，如果获取为空，则创建对象
@@ -112,7 +112,7 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
         return beanObject;
     }
 ~~~
-###### （3）BeanInstance接口，用于Bean对象的实例化（不做依赖注入）。有三种方式生成Bean对象：1.构造方法。2.静态方法。3.Bean对象的方法。通过Bean的定义信息和Bean工厂实例化对象。
+###### （3）***BeanInstance***接口，用于***Bean***对象的实例化（不做依赖注入）。有三种方式生成***Bean***对象：1.构造方法。2.静态方法。3.***Bean***对象的方法。通过***Bean***的定义信息和***Bean***工厂实例化对象。
 - 通过构造函数实例化对象
 ~~~
     @Override
