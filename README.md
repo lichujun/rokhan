@@ -64,7 +64,7 @@ private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(DEF
 // Bean对象的二级缓存
 private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
 ~~~
-- 在依赖注入获取***Bean***对象的过程中，先在Bean对象容器（一级缓存）查找***Bean***对象，如果没有则去二级缓存查找***Bean***对象。当***Bean***对象实例化后将该对象放入到二级缓存中：
+- 在依赖注入获取***Bean***对象的过程中，先在***Bean***对象容器（一级缓存）查找***Bean***对象，如果没有则去二级缓存查找***Bean***对象。当***Bean***对象实例化后将该对象放入到二级缓存中：
 ~~~
     private Object doGetBean(String beanName) throws Throwable {
         // 先从Bean对象容器里去取值，如果获取为空，则创建对象
