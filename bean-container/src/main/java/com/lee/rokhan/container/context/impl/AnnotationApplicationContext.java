@@ -1,13 +1,19 @@
 package com.lee.rokhan.container.context.impl;
 
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.lee.rokhan.common.utils.CastUtils;
 import com.lee.rokhan.common.utils.ReflectionUtils;
 import com.lee.rokhan.common.utils.ScanUtils;
+import com.lee.rokhan.container.advice.MethodBeforeAdvice;
+import com.lee.rokhan.container.advice.MethodReturnAdvice;
+import com.lee.rokhan.container.advice.MethodSurroundAdvice;
 import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.advisor.impl.AspectJPointcutAdvisor;
 import com.lee.rokhan.container.annotation.*;
 import com.lee.rokhan.container.annotation.Component;
 import com.lee.rokhan.container.constants.ApplicationContextConstants;
+import com.lee.rokhan.container.constants.ResourceConstants;
 import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
@@ -22,6 +28,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
@@ -34,6 +41,7 @@ import java.util.List;
 
 /**
  * Bean容器
+ *
  * @author lichujun
  * @date 2019/6/25 16:30
  */
@@ -57,6 +65,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
 
     /**
      * 初始化classSet和yamlResource
+     *
      * @throws IOException 扫描class文件IO异常
      */
     @SuppressWarnings("unchecked")
@@ -85,24 +94,71 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     /**
      * 初始化Ioc容器
      */
-    public void init() {
+    public void init() throws Throwable {
         if (CollectionUtils.isEmpty(classSet)) {
             return;
         }
         List<Advisor> advisors = new ArrayList<>();
         for (Class<?> clazz : classSet) {
-            String beanName = getComponentName(clazz);
-            if (StringUtils.isBlank(beanName)) {
+            PropertyValue propertyValue = getComponentName(clazz);
+            String beanName;
+            if (propertyValue == null || StringUtils.isBlank(beanName = propertyValue.getName())) {
                 continue;
             }
             // 注册未进行依赖注入的BeanDefinition
-            registerBeanDefinitionWithoutDI(clazz);
-            // 注册依赖关系
-            registerDI(clazz);
-            // 添加Advisor增强器，进行方法增强
-            addAdvisors(clazz, advisors, beanName);
+            BeanDefinition beanDefinition = registerBeanDefinitionWithoutDI(clazz, propertyValue);
+            if (propertyValue.getValue() == Configuration.class) {
+                registerConfiguration(beanDefinition, clazz);
+            } else {
+                // 注册依赖关系
+                registerDI(clazz, beanDefinition);
+                // 添加Advisor增强器，进行方法增强
+                addAdvisors(clazz, advisors, beanName);
+            }
         }
         registerBeanPostProcessor(new AdvisorAutoProxyCreator(advisors, this));
+
+        // 一次性加载所有单例的Bean对象
+        for (Class<?> clazz : classSet) {
+            PropertyValue propertyValue = getComponentName(clazz);
+            String beanName;
+            if (propertyValue == null || StringUtils.isBlank(beanName = propertyValue.getName())) {
+                continue;
+            }
+            BeanDefinition beanDefinition = getBeanDefinition(beanName);
+            if (!clazz.isInterface() && beanDefinition != null && beanDefinition.isSingleton()) {
+                getBean(beanName);
+            }
+        }
+    }
+
+    /**
+     * 注册配置文件
+     * @param beanDefinition Bean注册信息
+     * @param clazz 类对象
+     */
+    private void registerConfiguration(BeanDefinition beanDefinition, Class<?> clazz) {
+        if (beanDefinition != null) {
+            String configurationNode = clazz.getDeclaredAnnotation(Configuration.class).value();
+            JSONObject node;
+            if (StringUtils.isBlank(configurationNode)) {
+                node = yamlResource.getYamlNodeResource();
+            } else {
+                String[] nodes = configurationNode.split(ResourceConstants.SPOT);
+                node = yamlResource.getYamlNodeResource(nodes);
+            }
+            if (node != null) {
+                Set<Field> fields = ReflectionUtils.getDeclaredFields(clazz);
+                for (Field field : fields) {
+                    if (!field.isAnnotationPresent(Autowired.class)) {
+                        String fieldJSON = node.getString(field.getName());
+                        Object fieldValue = CastUtils.convert(fieldJSON, field.getGenericType(), field.getType());
+                        PropertyValue fieldProperty = new PropertyValue(field.getName(), fieldValue);
+                        beanDefinition.addPropertyValue(fieldProperty);
+                    }
+                }
+            }
+        }
     }
 
     @Override
@@ -112,8 +168,9 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 if (clazz == null) {
                     continue;
                 }
-                String beanName = getComponentName(clazz);
-                if (StringUtils.isBlank(beanName)) {
+                PropertyValue propertyValue = getComponentName(clazz);
+                String beanName;
+                if (propertyValue == null || StringUtils.isBlank(beanName = propertyValue.getName())) {
                     continue;
                 }
                 // 获取Bean对象实现的所有接口
@@ -139,16 +196,10 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
 
     /**
      * 注册Bean的注册信息，不包含依赖关系
+     *
      * @param clazz 类对象
      */
-    private void registerBeanDefinitionWithoutDI(Class<?> clazz) {
-        if (clazz == null) {
-            return;
-        }
-        String beanName = getComponentName(clazz);
-        if (StringUtils.isBlank(beanName)) {
-            return;
-        }
+    private BeanDefinition registerBeanDefinitionWithoutDI(Class<?> clazz, PropertyValue propertyValue) {
         // 通过构造函数实例化Bean对象注册Bean信息
         BeanDefinition beanDefinition = new IocBeanDefinition();
         beanDefinition.setBeanClass(clazz);
@@ -165,6 +216,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 beanDefinition.setConstructor(constructor);
             }
         }
+        String beanName = propertyValue.getName();
         // 注册Bean的信息
         registerBeanDefinition(beanName, beanDefinition);
 
@@ -203,11 +255,13 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             // 注册init方法和destroy方法
             registerInitAndDestroy(beanDefinition, method);
         }
+        return beanDefinition;
     }
 
     /**
      * 添加Advisor增强器
-     * @param clazz 类对象
+     *
+     * @param clazz    类对象
      * @param advisors Advisor增强器集合
      */
     private void addAdvisors(Class<?> clazz, List<Advisor> advisors, String beanName) {
@@ -243,12 +297,19 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             After after = method.getDeclaredAnnotation(After.class);
             Around around = method.getDeclaredAnnotation(Around.class);
             PropertyValue propertyValue = null;
+            Class<?> returnType = method.getReturnType();
             if (before != null) {
-                propertyValue = new PropertyValue(before.value(), before);
+                if (returnType == MethodBeforeAdvice.class) {
+                    propertyValue = new PropertyValue(before.value(), before);
+                }
             } else if (after != null) {
-                propertyValue = new PropertyValue(after.value(), after);
+                if (returnType == MethodReturnAdvice.class) {
+                    propertyValue = new PropertyValue(after.value(), after);
+                }
             } else if (around != null) {
-                propertyValue = new PropertyValue(around.value(), around);
+                if (returnType == MethodSurroundAdvice.class) {
+                    propertyValue = new PropertyValue(around.value(), around);
+                }
             }
             if (propertyValue != null) {
                 String pointcutName = propertyValue.getName();
@@ -266,8 +327,9 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
 
     /**
      * 注册init方法和destroy方法
+     *
      * @param beanDefinition Bean注册信息
-     * @param method 方法
+     * @param method         方法
      */
     private void registerInitAndDestroy(BeanDefinition beanDefinition, Method method) {
         PostConstruct postConstruct = method.getDeclaredAnnotation(PostConstruct.class);
@@ -288,18 +350,10 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
 
     /**
      * 注册Bean的依赖关系
+     *
      * @param clazz 类对象
      */
-    private void registerDI(Class<?> clazz) {
-        if (clazz == null) {
-            return;
-        }
-        String beanName = getComponentName(clazz);
-        if (StringUtils.isBlank(beanName)) {
-            return;
-        }
-        // 获取Bean名称的注册信息
-        BeanDefinition iocBeanDefinition = getBeanDefinition(beanName);
+    private void registerDI(Class<?> clazz, BeanDefinition iocBeanDefinition) {
         if (iocBeanDefinition == null) {
             return;
         }
@@ -340,6 +394,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
 
     /**
      * 通过参数列表类型获取参数的注入的对象
+     *
      * @param parameterTypes 参数列表类型
      * @return 参数列表对象
      */
@@ -350,8 +405,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             Autowired autowired = parameterType.getDeclaredAnnotation(Autowired.class);
             if (autowired == null || StringUtils.isBlank(autowired.value())) {
                 parameterBeanName = getDIValueByType(parameterType);
-            }
-            else {
+            } else {
                 parameterBeanName = autowired.value();
             }
             BeanReference beanReference = new BeanReference(parameterBeanName);
@@ -363,7 +417,8 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
 
     /**
      * 通过接口注册依赖信息
-     * @param field field字段
+     *
+     * @param field          field字段
      * @param beanDefinition Bean的注册信息
      */
     private void registerInterfaceDI(Field field, BeanDefinition beanDefinition) {
@@ -382,7 +437,8 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
 
     /**
      * 通过类注册依赖信息
-     * @param field field字段
+     *
+     * @param field          field字段
      * @param beanDefinition Bean的注册信息
      */
     private void registerClassDI(Field field, BeanDefinition beanDefinition) {
@@ -390,8 +446,10 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         if (autowired == null) {
             return;
         }
-        String propertyBeanName = autowired.value();
-        if (StringUtils.isBlank(propertyBeanName)) {
+        Class<?> clazz = field.getType();
+        PropertyValue property = getComponentName(clazz);
+        String propertyBeanName;
+        if (property == null || StringUtils.isBlank(propertyBeanName = property.getName())) {
             propertyBeanName = StringUtils.uncapitalize(field.getType().getSimpleName());
         }
         BeanReference beanReference = new BeanReference(propertyBeanName);
@@ -401,6 +459,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
 
     /**
      * 通过类型获取依赖注入的Bean名称
+     *
      * @param type 类型
      * @return Bean名称
      */
@@ -409,48 +468,56 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         List<String> beanNames = getBeanNamesByType(type);
         // 没有实现的Bean对象，则抛出异常，停止运行
         if (CollectionUtils.isEmpty(beanNames)) {
-            throw new RuntimeException("找不到"+ type.getSimpleName() + "的Bean");
+            throw new RuntimeException("找不到" + type.getSimpleName() + "的Bean");
         }
         // 如果有多个实现，但是没有指定Bean名称，则抛出异常，停止运行
-        else if (beanNames.size() > 1){
-            throw new RuntimeException("该接口"+ type.getSimpleName() + "有多个实现，请指定Bean名称");
+        else if (beanNames.size() > 1) {
+            throw new RuntimeException("该接口" + type.getSimpleName() + "有多个实现，请指定Bean名称");
         }
         return beanNames.get(0);
     }
 
     /**
      * 获取该类的Bean名称
+     *
      * @param clazz 类对象
      * @return Bean名称
      */
-    private String getComponentName(Class<?> clazz) {
-        if (clazz == null) {
-            return null;
-        }
-        String beanName = null;
+    private PropertyValue getComponentName(Class<?> clazz) {
+        Object componentValue = null;
+        String componentName = null;
         if (clazz.isAnnotationPresent(Component.class)) {
             Component component = clazz.getDeclaredAnnotation(Component.class);
-            beanName = component.value();
+            componentName = component.value();
+            componentValue = Component.class;
         }
         if (clazz.isAnnotationPresent(Controller.class)) {
             Controller controller = clazz.getDeclaredAnnotation(Controller.class);
-            beanName = controller.value();
+            componentName = controller.value();
+            componentValue = Controller.class;
         }
         if (clazz.isAnnotationPresent(Service.class)) {
             Service service = clazz.getDeclaredAnnotation(Service.class);
-            beanName = service.value();
+            componentName = service.value();
+            componentValue = Service.class;
         }
         if (clazz.isAnnotationPresent(Repository.class)) {
             Repository repository = clazz.getDeclaredAnnotation(Repository.class);
-            beanName = repository.value();
+            componentName = repository.value();
+            componentValue = Repository.class;
         }
-        if (beanName == null) {
+        if (clazz.isAnnotationPresent(Configuration.class)) {
+            Configuration configuration = clazz.getDeclaredAnnotation(Configuration.class);
+            componentName = configuration.value();
+            componentValue = Configuration.class;
+        }
+        if (componentValue == null) {
             return null;
         }
-        if (StringUtils.isBlank(beanName)) {
-            return StringUtils.uncapitalize(clazz.getSimpleName());
+        if (StringUtils.isBlank(componentName)) {
+            componentName = StringUtils.uncapitalize(clazz.getSimpleName());
         }
-        return beanName;
+        return new PropertyValue(componentName, componentValue);
     }
 
 }

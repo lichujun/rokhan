@@ -1,2 +1,5 @@
 scanPackages:
   - com.lee.rokhan.demo
+
+test1:
+  test: sdhsjd

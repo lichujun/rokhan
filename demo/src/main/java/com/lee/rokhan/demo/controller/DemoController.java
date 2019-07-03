@@ -4,6 +4,7 @@ import com.lee.rokhan.container.advice.MethodBeforeAdvice;
 import com.lee.rokhan.container.advice.MethodReturnAdvice;
 import com.lee.rokhan.container.advice.MethodSurroundAdvice;
 import com.lee.rokhan.container.annotation.*;
+import com.lee.rokhan.demo.configuration.TestConf;
 import com.lee.rokhan.demo.service.DemoService;
 import com.lee.rokhan.demo.service.impl.DemoServiceImpl;
 
@@ -21,7 +22,13 @@ public class DemoController {
     @Autowired
     private DemoService demoService;
 
-    /*DemoController(DemoService demoService) {
+    /*@Autowired
+    private DemoServiceImpl demoService1;*/
+
+    @Autowired
+    private TestConf testConf;
+
+   /*DemoController(DemoService demoService) {
         this.demoService = demoService;
     }*/
 
@@ -32,6 +39,7 @@ public class DemoController {
 
     public String test() {
         demoService.test();
+        testConf.test();
         System.out.println("hello world");
         return "老子返回了";
     }

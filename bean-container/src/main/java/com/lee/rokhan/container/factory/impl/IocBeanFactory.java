@@ -114,9 +114,8 @@ public class IocBeanFactory implements BeanFactory, Closeable {
             else if (fieldValue instanceof BeanReference) {
                 realFieldValue = doGetBean(((BeanReference) fieldValue).getBeanName());
             }
-            // TODO 其他类型处理，例如配置文件
             else {
-                realFieldValue = null;
+                realFieldValue = fieldValue;
             }
             field.set(beanObject, realFieldValue);
         }

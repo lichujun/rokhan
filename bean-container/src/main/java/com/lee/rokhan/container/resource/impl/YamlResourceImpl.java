@@ -88,7 +88,7 @@ public class YamlResourceImpl implements YamlResource {
     @Override
     public JSONObject getYamlNodeResource(String... nodes) {
         if (ArrayUtils.isEmpty(nodes)) {
-            return null;
+            return yamlResource;
         }
         JSONObject nodeResource = null;
         for (String node : nodes) {

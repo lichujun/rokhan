@@ -12,4 +12,6 @@ public class ResourceConstants {
     public static final String YAML_SUFFIX = ".yml";
 
     public static final String YAML_NAME = "application.yml";
+
+    public static final String SPOT = "\\.";
 }
