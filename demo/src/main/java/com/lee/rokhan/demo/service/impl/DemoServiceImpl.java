@@ -13,7 +13,7 @@ import com.lee.rokhan.demo.service.DemoService;
 @Service
 public class DemoServiceImpl implements DemoService {
 
-    //@Autowired
+    @Autowired
     private DemoController demoController;
 
 

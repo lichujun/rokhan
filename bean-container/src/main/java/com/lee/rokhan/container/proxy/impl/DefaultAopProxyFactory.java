@@ -6,7 +6,9 @@ import com.lee.rokhan.container.proxy.AopProxy;
 import com.lee.rokhan.container.proxy.AopProxyFactory;
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Aop动态代理工厂类
@@ -16,6 +18,11 @@ import java.util.List;
  * @date 2019/6/19 15:50
  */
 public class DefaultAopProxyFactory implements AopProxyFactory {
+
+    /**
+     * 通过类去匹配Bean对象
+     */
+    private final Set<String> classBeanNames = new HashSet<>();
 
     @Override
     public AopProxy createAopProxy(Object bean, String beanName, List<Advisor> matchAdvisors, BeanFactory beanFactory) {
@@ -27,10 +34,13 @@ public class DefaultAopProxyFactory implements AopProxyFactory {
     }
 
     private boolean shouldUseJDKDynamicProxy(Object bean, String beanName) {
-        if (bean == null) {
+        if (classBeanNames.contains(beanName)) {
             return false;
         }
-        Class<?> beanClass = bean.getClass();
-        return !ArrayUtils.isEmpty(beanClass.getInterfaces());
+        return true;
+    }
+
+    public void addClassBeanName(String classBeanName) {
+        classBeanNames.add(classBeanName);
     }
 }

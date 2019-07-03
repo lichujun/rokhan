@@ -23,4 +23,10 @@ public interface AopProxyFactory {
      */
     AopProxy createAopProxy(Object bean, String beanName, List<Advisor> matchAdvisors, BeanFactory beanFactory)
             throws Throwable;
+
+    /**
+     * 添加通过类注入依赖的Bean名称
+     * @param classBeanName Bean名称
+     */
+    void addClassBeanName(String classBeanName);
 }

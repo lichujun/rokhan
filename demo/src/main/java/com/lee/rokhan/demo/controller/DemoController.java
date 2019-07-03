@@ -22,8 +22,8 @@ public class DemoController {
     @Autowired
     private DemoService demoService;
 
-    /*@Autowired
-    private DemoServiceImpl demoService1;*/
+    @Autowired
+    private DemoServiceImpl demoService1;
 
     @Autowired
     private TestConf testConf;
@@ -39,6 +39,7 @@ public class DemoController {
 
     public String test() {
         demoService.test();
+        demoService1.test();
         testConf.test();
         System.out.println("hello world");
         return "老子返回了";
@@ -48,7 +49,7 @@ public class DemoController {
         System.out.println("controller");
     }
 
-    @Pointcut("execution(* com.lee.rokhan.demo.controller.*.test (..))")
+    @Pointcut("execution(* com.lee.rokhan.demo..*.test (..))")
     public void some() {
 
     }

@@ -21,6 +21,7 @@ import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import com.lee.rokhan.container.pojo.BeanReference;
 import com.lee.rokhan.container.pojo.PropertyValue;
 import com.lee.rokhan.container.processor.impl.AdvisorAutoProxyCreator;
+import com.lee.rokhan.container.proxy.AopProxyFactories;
 import com.lee.rokhan.container.resource.YamlResource;
 import com.lee.rokhan.container.resource.impl.YamlResourceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -455,6 +456,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         BeanReference beanReference = new BeanReference(propertyBeanName);
         PropertyValue propertyValue = new PropertyValue(field.getName(), beanReference);
         beanDefinition.addPropertyValue(propertyValue);
+        AopProxyFactories.getDefaultAopProxyFactory().addClassBeanName(propertyBeanName);
     }
 
     /**
