@@ -2,6 +2,8 @@ package com.lee.rokhan.demo.context;
 
 import com.lee.rokhan.container.annotation.Component;
 import com.lee.rokhan.container.context.ApplicationContext;
+import com.lee.rokhan.container.definition.BeanDefinition;
+import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.processor.ContextPostProcessor;
 
 /**
@@ -12,8 +14,13 @@ import com.lee.rokhan.container.processor.ContextPostProcessor;
 public class MapperPostProcessor implements ContextPostProcessor {
 
     @Override
-    public void postProcessBeforeInitialization(ApplicationContext context) {
-
+    public void postProcessBeforeInitialization(ApplicationContext context) throws Throwable {
+        MapperInvocationHandler mapperInvocationHandler = new MapperInvocationHandler();
+        Class<?>[] interfaces = {MapperInterface.class};
+        BeanDefinition beanDefinition = new IocBeanDefinition();
+        beanDefinition.setInterfaces(interfaces);
+        beanDefinition.setInvocationHandler(mapperInvocationHandler);
+        context.registerBeanDefinition("testMapper", beanDefinition);
     }
 
     @Override

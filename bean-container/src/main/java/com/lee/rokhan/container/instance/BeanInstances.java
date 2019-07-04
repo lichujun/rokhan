@@ -3,6 +3,7 @@ package com.lee.rokhan.container.instance;
 import com.lee.rokhan.container.instance.impl.ConstructorInstance;
 import com.lee.rokhan.container.instance.impl.FactoryBeanMethodInstance;
 import com.lee.rokhan.container.instance.impl.FactoryMethodInstance;
+import com.lee.rokhan.container.instance.impl.JdkDynamicProxyInstance;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -40,6 +41,14 @@ public class BeanInstances {
     }
 
     /**
+     * 获取JDL动态代理生成对象的实例生成器
+     * @return JDL动态代理生成对象的实例生成器
+     */
+    public static BeanInstance getJdkDynamicProxyInstance() {
+        return BeanInstanceHolder.JDK_DYNAMIC_PROXY_INSTANCE.beanInstance;
+    }
+
+    /**
      * 枚举生成单例对象
      */
     @AllArgsConstructor
@@ -57,6 +66,10 @@ public class BeanInstances {
          * 工厂方法的实例生成器
          */
         FACTORY_METHOD_INSTANCE(new FactoryMethodInstance()),
+        /**
+         * JDK动态代理实例化
+         */
+        JDK_DYNAMIC_PROXY_INSTANCE(new JdkDynamicProxyInstance()),
         ;
 
         private BeanInstance beanInstance;

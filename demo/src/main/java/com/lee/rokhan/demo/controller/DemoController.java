@@ -10,6 +10,7 @@ import com.lee.rokhan.container.aware.BeanNameAware;
 import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.demo.configuration.TestConf;
+import com.lee.rokhan.demo.context.MapperInterface;
 import com.lee.rokhan.demo.service.DemoService;
 import com.lee.rokhan.demo.service.impl.DemoServiceImpl;
 import javax.annotation.PostConstruct;
@@ -31,6 +32,9 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
     @Autowired
     private TestConf testConf;
 
+    @Autowired("testMapper")
+    private MapperInterface mapperInterface;
+
    /*DemoController(DemoService demoService) {
         this.demoService = demoService;
     }*/
@@ -42,6 +46,7 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
 
     public String test() {
         demoService.test();
+        mapperInterface.doSome();
         //demoService1.test();
         return "老子返回了";
     }

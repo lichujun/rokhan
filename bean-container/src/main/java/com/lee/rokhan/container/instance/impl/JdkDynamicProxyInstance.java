@@ -13,16 +13,12 @@ import java.lang.reflect.Proxy;
  * @date 2019/7/4 17:34
  */
 @AllArgsConstructor
-public class DynamicProxyInstance implements BeanInstance {
-
-    private InvocationHandler invocationHandler;
-
-    private Class<?>[] interfaces;
-
-    private Object realObject;
+public class JdkDynamicProxyInstance implements BeanInstance {
 
     @Override
     public Object instance(BeanDefinition beanDefinition, BeanFactory beanFactory) {
+        Class<?>[] interfaces = beanDefinition.getInterfaces();
+        InvocationHandler invocationHandler = beanDefinition.getInvocationHandler();
         return Proxy.newProxyInstance(this.getClass().getClassLoader(), interfaces ,invocationHandler);
     }
 }

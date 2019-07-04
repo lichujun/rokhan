@@ -145,7 +145,9 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
             Class<?> beanClass = beanDefinition.getBeanClass();
             // 获取实例生成器
             BeanInstance beanInstance;
-            if (beanClass != null) {
+            if (beanDefinition.getInvocationHandler() != null) {
+                beanInstance = BeanInstances.getJdkDynamicProxyInstance();
+            } else if (beanClass != null) {
                 if (StringUtils.isBlank(beanDefinition.getFactoryMethodName())) {
                     // 使用构造函数的实例生成器
                     beanInstance = BeanInstances.getConstructorInstance();
