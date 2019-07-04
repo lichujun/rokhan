@@ -252,13 +252,13 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
 ~~~
 - ***Bean***对象实例化并依赖注入后调用***set***方法注入外界属性
 ~~~
-    if (ReflectionUtils.existInterface(beanObjectClass, BeanNameAware.class)) {
+    if (BeanNameAware.class.isAssignableFrom(beanObjectClass)) {
         ((BeanNameAware) beanObject).setBeanName(beanName);
     }
-    if (ReflectionUtils.existInterface(beanObjectClass, BeanFactoryAware.class)) {
+    if (BeanFactoryAware.class.isAssignableFrom(beanObjectClass)) {
         ((BeanFactoryAware) beanObject).setBeanFactory(this);
     }
-    if (ReflectionUtils.existInterface(beanObjectClass, ApplicationContextAware.class)) {
+    if (ApplicationContextAware.class.isAssignableFrom(beanObjectClass)) {
         ((ApplicationContextAware) beanObject).setApplicationContext((ApplicationContext) this);
     }
 ~~~
