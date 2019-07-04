@@ -1,7 +1,7 @@
 package com.lee.rokhan.container.context;
 
+import com.lee.rokhan.common.utils.throwable.ThrowConsumer;
 import com.lee.rokhan.container.factory.BeanFactory;
-
 import java.util.Set;
 
 /**
@@ -18,4 +18,10 @@ public interface ApplicationContext extends BeanFactory {
      * @return Bean名称数组
      */
     Set<String> getBeanNamesByType(Class<?> type);
+
+    /**
+     * 处理扫描出的所有Class对象
+     * @param consumer 处理
+     */
+    void processScanClass(ThrowConsumer<Class<?>, Throwable> consumer) throws Throwable;
 }

@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.lee.rokhan.common.utils.CastUtils;
 import com.lee.rokhan.common.utils.ReflectionUtils;
 import com.lee.rokhan.common.utils.ScanUtils;
+import com.lee.rokhan.common.utils.throwable.ThrowConsumer;
 import com.lee.rokhan.container.advice.MethodBeforeAdvice;
 import com.lee.rokhan.container.advice.MethodReturnAdvice;
 import com.lee.rokhan.container.advice.MethodSurroundAdvice;
@@ -20,6 +21,7 @@ import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import com.lee.rokhan.container.pojo.BeanReference;
 import com.lee.rokhan.container.pojo.PropertyValue;
+import com.lee.rokhan.container.processor.ContextPostProcessor;
 import com.lee.rokhan.container.processor.impl.AdvisorAutoProxyCreator;
 import com.lee.rokhan.container.proxy.AopProxyFactories;
 import com.lee.rokhan.container.resource.YamlResource;
@@ -87,7 +89,25 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 }
             }
         }
+        List<ContextPostProcessor> contextPostProcessors = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(classSet)) {
+            for (Class<?> aClass : classSet) {
+                if (getComponentName(aClass) != null && ContextPostProcessor.class.isAssignableFrom(aClass) && !aClass.isInterface()) {
+                    contextPostProcessors.add((ContextPostProcessor) aClass.newInstance());
+                }
+            }
+        }
+        if (CollectionUtils.isNotEmpty(contextPostProcessors)) {
+            for (ContextPostProcessor contextPostProcessor : contextPostProcessors) {
+                contextPostProcessor.postProcessBeforeInitialization(this);
+            }
+        }
         init();
+        if (CollectionUtils.isNotEmpty(contextPostProcessors)) {
+            for (ContextPostProcessor contextPostProcessor : contextPostProcessors) {
+                contextPostProcessor.postProcessAfterInitialization(this);
+            }
+        }
     }
 
 
@@ -122,16 +142,28 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         registerBeanPostProcessor(new AdvisorAutoProxyCreator(advisors, this));
 
         // 一次性加载所有单例的Bean对象
-        for (Class<?> clazz : classSet) {
+        ThrowConsumer<Class<?>, Throwable> loadSingletonBeanConsumer = clazz -> {
             PropertyValue propertyValue = getComponentName(clazz);
             String beanName;
             if (propertyValue == null || StringUtils.isBlank(beanName = propertyValue.getName())) {
-                continue;
+                return;
             }
             BeanDefinition beanDefinition = getBeanDefinition(beanName);
             if (!clazz.isInterface() && beanDefinition != null && beanDefinition.isSingleton()) {
                 getBean(beanName);
             }
+        };
+        processScanClass(loadSingletonBeanConsumer);
+    }
+
+    /**
+     * 处理扫描出的所有Class对象
+     * @param consumer 处理
+     */
+    @Override
+    public void processScanClass(ThrowConsumer<Class<?>, Throwable> consumer) throws Throwable {
+        for (Class<?> clazz : classSet) {
+            consumer.accept(clazz);
         }
     }
 
