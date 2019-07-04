@@ -191,6 +191,77 @@ private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<
         private final Object value;
     }
 ~~~
+###### （6）***Aware***注入外界属性，即***Bean***名称、***Bean***工厂和应用上下文。
+- ***Aware***接口
+~~~
+    /**
+     * 注册Bean对象时，注入对应属性，让Bean对象获取到外界信息
+     * @author lichujun
+     * @date 2019/7/4 11:02
+     */
+    public interface Aware {
+    }
+~~~
+- ***BeanNameAware***接口
+~~~
+    /**
+     * 让Bean对象获取到Bean名称
+     * @author lichujun
+     * @date 2019/7/4 11:03
+     */
+    public interface BeanNameAware extends Aware {
+
+        /**
+         * 设置Bean名称
+         * @param beanName Bean名称
+         */
+        void setBeanName(String beanName);
+    }
+~~~
+- ***BeanFactory***接口
+~~~
+    /**
+     * 让Bean对象获取到Bean工厂
+     * @author lichujun
+     * @date 2019/7/4 11:04
+     */
+    public interface BeanFactoryAware extends Aware {
+
+        /**
+         * 设置Bean工厂
+         * @param beanFactory Bean工厂
+         */
+        void setBeanFactory(BeanFactory beanFactory) throws Throwable;
+    }
+~~~
+- ***ApplicationContextAware***接口
+~~~
+    /**
+     * 让Bean对象获取到应用上下文
+     * @author lichujun
+     * @date 2019/7/4 11:05
+     */
+    public interface ApplicationContextAware extends Aware {
+
+        /**
+         * 设置应用上下文
+         * @param applicationContext  应用上下文
+         */
+        void setApplicationContext(ApplicationContext applicationContext);
+    }
+~~~
+- ***Bean***对象实例化并依赖注入后调用***set***方法注入外界属性
+~~~
+    if (ReflectionUtils.existInterface(beanObjectClass, BeanNameAware.class)) {
+        ((BeanNameAware) beanObject).setBeanName(beanName);
+    }
+    if (ReflectionUtils.existInterface(beanObjectClass, BeanFactoryAware.class)) {
+        ((BeanFactoryAware) beanObject).setBeanFactory(this);
+    }
+    if (ReflectionUtils.existInterface(beanObjectClass, ApplicationContextAware.class)) {
+        ((ApplicationContextAware) beanObject).setApplicationContext((ApplicationContext) this);
+    }
+~~~
 ##### 二、***AOP***方法增强
 ###### （1）定义***Advice***接口，用于方法通知。定义了三种通知接口：1.前置通知：***MethodBeforeAdvice***。2.后置通知***MethodReturnAdvice***。3.环绕通知：***MethodSurroundAdvice***。
 - 前置通知接口
