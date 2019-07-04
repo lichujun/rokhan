@@ -2,7 +2,7 @@ package com.lee.rokhan.container.context;
 
 import com.lee.rokhan.container.factory.BeanFactory;
 
-import java.util.List;
+import java.util.Set;
 
 /**
  * Bean容器
@@ -17,5 +17,5 @@ public interface ApplicationContext extends BeanFactory {
      * @param type 接口类型
      * @return Bean名称数组
      */
-    List<String> getBeanNamesByType(Class<?> type);
+    Set<String> getBeanNamesByType(Class<?> type);
 }

@@ -1,5 +1,6 @@
 package com.lee.rokhan.container.proxy.impl;
 
+import com.lee.rokhan.common.utils.ReflectionUtils;
 import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.proxy.AopProxy;
@@ -10,6 +11,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 通过JDK生成代理对象
@@ -52,6 +54,8 @@ public class JdkDynamicAopProxy implements AopProxy, InvocationHandler {
         if (log.isDebugEnabled()) {
             log.debug("为" + target + "创建代理。");
         }
-        return Proxy.newProxyInstance(classLoader, target.getClass().getInterfaces(), this);
+        Set<Class<?>> interfaceSet = ReflectionUtils.getInterfaces(target.getClass());
+        Class<?>[] interfaces = interfaceSet.toArray(new Class[0]);
+        return Proxy.newProxyInstance(classLoader, interfaces, this);
     }
 }

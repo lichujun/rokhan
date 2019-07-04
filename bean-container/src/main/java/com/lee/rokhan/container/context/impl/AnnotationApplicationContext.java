@@ -56,7 +56,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     /**
      * 接口类型所实现的Bean对象的Bean名称
      */
-    private final Map<Class<?>, List<String>> typeToBeanNames = new HashMap<>();
+    private final Map<Class<?>, Set<String>> typeToBeanNames = new HashMap<>();
 
     /**
      * 配置文件
@@ -68,7 +68,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      *
      * @throws IOException 扫描class文件IO异常
      */
-    public AnnotationApplicationContext() throws IOException {
+    public AnnotationApplicationContext() throws Throwable {
         yamlResource = new YamlResourceImpl();
         // 获取需要扫描的包
         JSONArray scanPackages = yamlResource.getYamlNodeArrayResource(ApplicationContextConstants.SCAN_PACKAGES);
@@ -87,13 +87,14 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 }
             }
         }
+        init();
     }
 
 
     /**
      * 初始化Ioc容器
      */
-    public void init() throws Throwable {
+    private void init() throws Throwable {
         if (CollectionUtils.isEmpty(classSet)) {
             return;
         }
@@ -102,6 +103,9 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             PropertyValue propertyValue = getComponentName(clazz);
             String beanName;
             if (propertyValue == null || StringUtils.isBlank(beanName = propertyValue.getName())) {
+                continue;
+            }
+            if (clazz.isInterface()) {
                 continue;
             }
             // 注册未进行依赖注入的BeanDefinition
@@ -161,32 +165,62 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     }
 
     @Override
-    public List<String> getBeanNamesByType(Class<?> type) {
+    public Set<String> getBeanNamesByType(Class<?> type) {
         if (MapUtils.isEmpty(typeToBeanNames)) {
             for (Class<?> clazz : classSet) {
-                if (clazz == null) {
+                if (clazz == null || clazz.isInterface()) {
                     continue;
                 }
                 PropertyValue propertyValue = getComponentName(clazz);
                 String beanName;
-                if (propertyValue == null || StringUtils.isBlank(beanName = propertyValue.getName())) {
+                if (propertyValue == null) {
                     continue;
                 }
-                // 获取Bean对象实现的所有接口
-                Set<Class<?>> typeInterfaces = Optional.of(clazz)
-                        .map(ReflectionUtils::getInterfaces)
-                        .orElse(null);
-                if (typeInterfaces == null || CollectionUtils.isEmpty(typeInterfaces)) {
+                beanName = propertyValue.getName();
+                if (StringUtils.isBlank(beanName)) {
                     continue;
                 }
-                // 将接口和它的所有实现注册到容器中
-                for (Class<?> typeInterface : typeInterfaces) {
-                    List<String> beanNames = typeToBeanNames.computeIfAbsent(typeInterface, k -> new ArrayList<>());
-                    beanNames.add(beanName);
+                addTypeToName(clazz, beanName);
+                Set<Method> methods = ReflectionUtils.getDeclaredMethods(clazz);
+                for (Method method : methods) {
+                    Bean bean = method.getDeclaredAnnotation(Bean.class);
+                    if (bean != null) {
+                        Class<?> returnType = method.getReturnType();
+                        beanName = Optional.of(bean)
+                                .map(Bean::value)
+                                .filter(StringUtils::isNotBlank)
+                                .orElse(StringUtils.uncapitalize(returnType.getSimpleName()));
+                        addTypeToName(returnType, beanName);
+                    }
                 }
             }
         }
         return typeToBeanNames.get(type);
+    }
+
+    /**
+     * 添加接口与它的实现的对应关系
+     * @param clazz 接口
+     * @param beanName Bean名称
+     */
+    private void addTypeToName(Class<?> clazz, String beanName) {
+        if (clazz.isInterface()) {
+            Set<String> beanNames = typeToBeanNames.computeIfAbsent(clazz, k -> new HashSet<>());
+            beanNames.add(beanName);
+        } else {
+            // 获取Bean对象实现的所有接口
+            Set<Class<?>> typeInterfaces = Optional.of(clazz)
+                    .map(ReflectionUtils::getInterfaces)
+                    .orElse(null);
+            if (typeInterfaces == null || CollectionUtils.isEmpty(typeInterfaces)) {
+                return;
+            }
+            // 将接口和它的所有实现注册到容器中
+            for (Class<?> typeInterface : typeInterfaces) {
+                Set<String> beanNames = typeToBeanNames.computeIfAbsent(typeInterface, k -> new HashSet<>());
+                beanNames.add(beanName);
+            }
+        }
     }
 
     /**
@@ -464,7 +498,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      */
     private String getDIValueByType(Class<?> type) {
         // 获取接口实现的所有Bean对象的bean名称
-        List<String> beanNames = getBeanNamesByType(type);
+        Set<String> beanNames = getBeanNamesByType(type);
         // 没有实现的Bean对象，则抛出异常，停止运行
         if (CollectionUtils.isEmpty(beanNames)) {
             throw new RuntimeException("找不到" + type.getSimpleName() + "的Bean");
@@ -473,7 +507,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         else if (beanNames.size() > 1) {
             throw new RuntimeException("该接口" + type.getSimpleName() + "有多个实现，请指定Bean名称");
         }
-        return beanNames.get(0);
+        return beanNames.toArray(new String[0])[0];
     }
 
     /**

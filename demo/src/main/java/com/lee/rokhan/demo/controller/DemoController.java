@@ -22,7 +22,7 @@ import javax.annotation.PostConstruct;
 @Aspect
 public class DemoController implements BeanNameAware, BeanFactoryAware, ApplicationContextAware {
 
-    @Autowired
+    @Autowired("demoService")
     private DemoService demoService;
 
     @Autowired
@@ -42,9 +42,7 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
 
     public String test() {
         demoService.test();
-        demoService1.test();
-        testConf.test();
-        System.out.println("hello world");
+        //demoService1.test();
         return "老子返回了";
     }
 
@@ -52,7 +50,7 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
         System.out.println("controller");
     }
 
-    @Pointcut("execution(* com.lee.rokhan.demo..*.test (..))")
+    @Pointcut("execution(* com.lee.rokhan.demo.service.*.test (..))")
     public void some() {
 
     }
@@ -77,6 +75,11 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
         });
     }
 
+    @Bean
+    public DemoService getDemoService() {
+        return new DemoServiceImpl();
+    }
+
     @Override
     public void setBeanName(String beanName) {
         System.out.println(beanName);
@@ -86,6 +89,7 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
     public void setBeanFactory(BeanFactory beanFactory) throws Throwable {
         DemoController demoController = (DemoController) beanFactory.getBean("demoController");
         demoController.test();
+
     }
 
     @Override

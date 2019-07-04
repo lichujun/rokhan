@@ -1,5 +1,6 @@
 package com.lee.rokhan.demo;
 
+import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.context.impl.AnnotationApplicationContext;
 
 /**
@@ -10,8 +11,7 @@ public class DemoServer {
 
     public static void main(String[] args) throws Throwable {
 
-        AnnotationApplicationContext context = new AnnotationApplicationContext();
-        context.init();
+        ApplicationContext context = new AnnotationApplicationContext();
     }
 
 }
