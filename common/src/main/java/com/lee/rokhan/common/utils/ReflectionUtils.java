@@ -3,7 +3,6 @@ package com.lee.rokhan.common.utils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -143,31 +142,6 @@ public abstract class ReflectionUtils {
             interfaceSet.addAll(Arrays.asList(interfaceArr));
         }
         return interfaceSet;
-    }
-
-    /**
-     * 判断Class是否实现了接口
-     * @param clazz 类
-     * @param interfaceClazz 接口
-     * @return 是否实现了接口
-     */
-    public static boolean existInterface(Class<?> clazz, Class<?> interfaceClazz) {
-        if (clazz == null) {
-            return false;
-        }
-        for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
-            if (clazz == null) {
-                break;
-            }
-            Class<?>[] interfaceArr = clazz.getInterfaces();
-            if (ArrayUtils.isNotEmpty(interfaceArr)) {
-                List<Class<?>> interfaceList = Arrays.asList(interfaceArr);
-                if (interfaceList.contains(interfaceClazz)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     /**

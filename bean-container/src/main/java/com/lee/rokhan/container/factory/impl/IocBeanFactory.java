@@ -1,6 +1,5 @@
 package com.lee.rokhan.container.factory.impl;
 
-import com.lee.rokhan.common.utils.ReflectionUtils;
 import com.lee.rokhan.container.aware.ApplicationContextAware;
 import com.lee.rokhan.container.aware.BeanFactoryAware;
 import com.lee.rokhan.container.aware.BeanNameAware;
@@ -164,13 +163,13 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
             // 进行依赖注入
             setPropertyDIValues(beanDefinition, beanObject);
             Class<?> beanObjectClass = beanObject.getClass();
-            if (ReflectionUtils.existInterface(beanObjectClass, BeanNameAware.class)) {
+            if (BeanNameAware.class.isAssignableFrom(beanObjectClass)) {
                 ((BeanNameAware) beanObject).setBeanName(beanName);
             }
-            if (ReflectionUtils.existInterface(beanObjectClass, BeanFactoryAware.class)) {
+            if (BeanFactoryAware.class.isAssignableFrom(beanObjectClass)) {
                 ((BeanFactoryAware) beanObject).setBeanFactory(this);
             }
-            if (ReflectionUtils.existInterface(beanObjectClass, ApplicationContextAware.class)) {
+            if (ApplicationContextAware.class.isAssignableFrom(beanObjectClass)) {
                 ((ApplicationContextAware) beanObject).setApplicationContext((ApplicationContext) this);
             }
             // 初始化对象之前处理
