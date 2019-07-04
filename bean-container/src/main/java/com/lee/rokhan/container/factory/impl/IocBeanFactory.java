@@ -44,7 +44,7 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
     // Bean对象的二级缓存
     private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
 
-    // 监听Bean的生命周期
+    // Bean初始化前后处理
     private final List<BeanPostProcessor> beanPostProcessors = Collections.synchronizedList(new ArrayList<>());
 
 

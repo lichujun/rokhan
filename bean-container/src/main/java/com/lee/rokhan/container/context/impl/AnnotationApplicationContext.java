@@ -90,19 +90,23 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             }
         }
         List<ContextPostProcessor> contextPostProcessors = new ArrayList<>();
+        // 添加应用上下文初始化前后的处理
         if (CollectionUtils.isNotEmpty(classSet)) {
-            for (Class<?> aClass : classSet) {
-                if (getComponentName(aClass) != null && ContextPostProcessor.class.isAssignableFrom(aClass) && !aClass.isInterface()) {
-                    contextPostProcessors.add((ContextPostProcessor) aClass.newInstance());
+            processScanClass(clazz -> {
+                if (getComponentName(clazz) != null && ContextPostProcessor.class.isAssignableFrom(clazz) && !clazz.isInterface()) {
+                    contextPostProcessors.add((ContextPostProcessor) clazz.newInstance());
                 }
-            }
+            });
         }
+        // 应用上下文初始化前置处理
         if (CollectionUtils.isNotEmpty(contextPostProcessors)) {
             for (ContextPostProcessor contextPostProcessor : contextPostProcessors) {
                 contextPostProcessor.postProcessBeforeInitialization(this);
             }
         }
+        // 应用上下文初始化
         init();
+        // 应用上下文后置处理
         if (CollectionUtils.isNotEmpty(contextPostProcessors)) {
             for (ContextPostProcessor contextPostProcessor : contextPostProcessors) {
                 contextPostProcessor.postProcessAfterInitialization(this);
@@ -142,7 +146,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         registerBeanPostProcessor(new AdvisorAutoProxyCreator(advisors, this));
 
         // 一次性加载所有单例的Bean对象
-        ThrowConsumer<Class<?>, Throwable> loadSingletonBeanConsumer = clazz -> {
+        processScanClass(clazz -> {
             PropertyValue propertyValue = getComponentName(clazz);
             String beanName;
             if (propertyValue == null || StringUtils.isBlank(beanName = propertyValue.getName())) {
@@ -152,8 +156,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             if (!clazz.isInterface() && beanDefinition != null && beanDefinition.isSingleton()) {
                 getBean(beanName);
             }
-        };
-        processScanClass(loadSingletonBeanConsumer);
+        });
     }
 
     /**

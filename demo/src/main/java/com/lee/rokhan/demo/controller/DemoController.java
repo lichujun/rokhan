@@ -55,7 +55,7 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
         System.out.println("controller");
     }
 
-    @Pointcut("execution(* com.lee.rokhan.demo.service.*.test (..))")
+    @Pointcut("execution(* com.lee.rokhan.demo..*.do* (..))")
     public void some() {
 
     }
