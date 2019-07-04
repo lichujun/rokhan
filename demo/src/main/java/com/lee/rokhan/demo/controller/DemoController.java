@@ -4,12 +4,15 @@ import com.lee.rokhan.container.advice.MethodBeforeAdvice;
 import com.lee.rokhan.container.advice.MethodReturnAdvice;
 import com.lee.rokhan.container.advice.MethodSurroundAdvice;
 import com.lee.rokhan.container.annotation.*;
+import com.lee.rokhan.container.aware.ApplicationContextAware;
+import com.lee.rokhan.container.aware.BeanFactoryAware;
+import com.lee.rokhan.container.aware.BeanNameAware;
+import com.lee.rokhan.container.context.ApplicationContext;
+import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.demo.configuration.TestConf;
 import com.lee.rokhan.demo.service.DemoService;
 import com.lee.rokhan.demo.service.impl.DemoServiceImpl;
-
 import javax.annotation.PostConstruct;
-import java.lang.reflect.Method;
 
 /**
  * @author lichujun
@@ -17,7 +20,7 @@ import java.lang.reflect.Method;
  */
 @Controller
 @Aspect
-public class DemoController {
+public class DemoController implements BeanNameAware, BeanFactoryAware, ApplicationContextAware {
 
     @Autowired
     private DemoService demoService;
@@ -74,4 +77,19 @@ public class DemoController {
         });
     }
 
+    @Override
+    public void setBeanName(String beanName) {
+        System.out.println(beanName);
+    }
+
+    @Override
+    public void setBeanFactory(BeanFactory beanFactory) throws Throwable {
+        DemoController demoController = (DemoController) beanFactory.getBean("demoController");
+        demoController.test();
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        System.out.println(applicationContext.getBeanNamesByType(DemoService.class));
+    }
 }

@@ -1,5 +1,7 @@
 package com.lee.rokhan.container.context;
 
+import com.lee.rokhan.container.factory.BeanFactory;
+
 import java.util.List;
 
 /**
@@ -8,7 +10,7 @@ import java.util.List;
  * @author lichujun
  * @date 2019/6/26 10:25
  */
-public interface ApplicationContext {
+public interface ApplicationContext extends BeanFactory {
 
     /**
      * 通过接口类型获取实现的Bean对象的Bean名称

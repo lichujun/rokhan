@@ -35,6 +35,7 @@ public class DefaultAopProxyFactory implements AopProxyFactory {
         return !classBeanNames.contains(beanName);
     }
 
+    @Override
     public void addClassBeanName(String classBeanName) {
         classBeanNames.add(classBeanName);
     }

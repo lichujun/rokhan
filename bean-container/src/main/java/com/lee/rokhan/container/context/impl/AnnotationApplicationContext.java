@@ -181,11 +181,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 }
                 // 将接口和它的所有实现注册到容器中
                 for (Class<?> typeInterface : typeInterfaces) {
-                    List<String> beanNames = typeToBeanNames.get(typeInterface);
-                    if (beanNames == null) {
-                        beanNames = new ArrayList<>();
-                        typeToBeanNames.put(type, beanNames);
-                    }
+                    List<String> beanNames = typeToBeanNames.computeIfAbsent(typeInterface, k -> new ArrayList<>());
                     beanNames.add(beanName);
                 }
             }

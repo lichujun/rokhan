@@ -146,6 +146,31 @@ public abstract class ReflectionUtils {
     }
 
     /**
+     * 判断Class是否实现了接口
+     * @param clazz 类
+     * @param interfaceClazz 接口
+     * @return 是否实现了接口
+     */
+    public static boolean existInterface(Class<?> clazz, Class<?> interfaceClazz) {
+        if (clazz == null) {
+            return false;
+        }
+        for (; clazz != Object.class; clazz = clazz.getSuperclass()) {
+            if (clazz == null) {
+                break;
+            }
+            Class<?>[] interfaceArr = clazz.getInterfaces();
+            if (ArrayUtils.isNotEmpty(interfaceArr)) {
+                List<Class<?>> interfaceList = Arrays.asList(interfaceArr);
+                if (interfaceList.contains(interfaceClazz)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
      * 循环向上转型, 获取对象的 DeclaredMethod
      *
      * @param clazz          子类的类对象

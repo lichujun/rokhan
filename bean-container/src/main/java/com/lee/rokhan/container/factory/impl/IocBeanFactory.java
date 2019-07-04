@@ -1,5 +1,10 @@
 package com.lee.rokhan.container.factory.impl;
 
+import com.lee.rokhan.common.utils.ReflectionUtils;
+import com.lee.rokhan.container.aware.ApplicationContextAware;
+import com.lee.rokhan.container.aware.BeanFactoryAware;
+import com.lee.rokhan.container.aware.BeanNameAware;
+import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.instance.BeanInstance;
 import com.lee.rokhan.container.instance.BeanInstances;
 import com.lee.rokhan.container.pojo.BeanReference;
@@ -26,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 @NoArgsConstructor
-public class IocBeanFactory implements BeanFactory, Closeable {
+public abstract class IocBeanFactory implements BeanFactory, Closeable {
 
     // 考虑并发情况，默认256，防止扩容
     private static final int DEFAULT_SIZE = 256;
@@ -158,6 +163,16 @@ public class IocBeanFactory implements BeanFactory, Closeable {
             earlySingletonObjects.put(beanName, beanObject);
             // 进行依赖注入
             setPropertyDIValues(beanDefinition, beanObject);
+            Class<?> beanObjectClass = beanObject.getClass();
+            if (ReflectionUtils.existInterface(beanObjectClass, BeanNameAware.class)) {
+                ((BeanNameAware) beanObject).setBeanName(beanName);
+            }
+            if (ReflectionUtils.existInterface(beanObjectClass, BeanFactoryAware.class)) {
+                ((BeanFactoryAware) beanObject).setBeanFactory(this);
+            }
+            if (ReflectionUtils.existInterface(beanObjectClass, ApplicationContextAware.class)) {
+                ((ApplicationContextAware) beanObject).setApplicationContext((ApplicationContext) this);
+            }
             // 初始化对象之前处理
             beanObject = applyPostProcessBeforeInitialization(beanObject, beanName);
             // 对象初始化
