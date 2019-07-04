@@ -75,7 +75,7 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
         });
     }
 
-    //@Bean
+    @Bean
     public DemoService getDemoService() {
         return new DemoServiceImpl();
     }
