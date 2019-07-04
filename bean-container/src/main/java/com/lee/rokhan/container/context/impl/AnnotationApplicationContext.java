@@ -480,9 +480,11 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         }
         Class<?> clazz = field.getType();
         PropertyValue property = getComponentName(clazz);
-        String propertyBeanName;
-        if (property == null || StringUtils.isBlank(propertyBeanName = property.getName())) {
-            propertyBeanName = StringUtils.uncapitalize(field.getType().getSimpleName());
+        String propertyBeanName = autowired.value();
+        if (StringUtils.isBlank(propertyBeanName)) {
+            if (property == null || StringUtils.isBlank(propertyBeanName = property.getName())) {
+                propertyBeanName = StringUtils.uncapitalize(field.getType().getSimpleName());
+            }
         }
         BeanReference beanReference = new BeanReference(propertyBeanName);
         PropertyValue propertyValue = new PropertyValue(field.getName(), beanReference);

@@ -25,7 +25,7 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
     @Autowired("demoService")
     private DemoService demoService;
 
-    @Autowired
+    @Autowired("demoService")
     private DemoServiceImpl demoService1;
 
     @Autowired
