@@ -10,7 +10,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public class ComponentInjection {
+public class InjectionProperty {
 
     private String beanName;
 

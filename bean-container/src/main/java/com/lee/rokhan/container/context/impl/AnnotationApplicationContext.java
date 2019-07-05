@@ -19,7 +19,7 @@ import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import com.lee.rokhan.container.pojo.BeanReference;
-import com.lee.rokhan.container.pojo.ComponentInjection;
+import com.lee.rokhan.container.pojo.InjectionProperty;
 import com.lee.rokhan.container.pojo.ComponentProperty;
 import com.lee.rokhan.container.pojo.PropertyValue;
 import com.lee.rokhan.container.processor.BeanPostProcessor;
@@ -113,66 +113,73 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         // 注册Bean的信息
         processAllComponentProperty(componentProperty -> {
             Class<?> clazz = componentProperty.getClazz();
-            ComponentInjection componentInjection = componentProperty.getComponentInjection();
+            InjectionProperty injectionProperty = componentProperty.getInjectionProperty();
             if (clazz.isInterface()) {
                 return;
             }
             // 注册未进行依赖注入的BeanDefinition
-            registerBeanDefinitionWithoutDI(clazz, componentInjection);
+            registerBeanDefinitionWithoutDI(clazz, injectionProperty);
         });
 
         // 注册依赖关系
         processAllComponentProperty(componentProperty -> {
+            registerDI(componentProperty);
+            String beanName = componentProperty.getInjectionProperty().getBeanName();
             Class<?> clazz = componentProperty.getClazz();
-            ComponentInjection componentInjection = componentProperty.getComponentInjection();
-            String beanName = componentInjection.getBeanName();
-            BeanDefinition beanDefinition = getBeanDefinition(beanName);
-            Constructor[] constructors = clazz.getDeclaredConstructors();
-            if (ArrayUtils.isNotEmpty(constructors)) {
-                if (constructors.length > 1) {
-                    throw new RuntimeException(clazz.getSimpleName() + "存在多个构造函数");
-                }
-                Constructor constructor = constructors[0];
-                Class<?>[] parameterTypes = constructor.getParameterTypes();
-                if (ArrayUtils.isNotEmpty(parameterTypes)) {
-                    List<Object> parameters = getParameterDIValues(parameterTypes);
-                    beanDefinition.setArgumentValues(parameters);
-                    beanDefinition.setConstructor(constructor);
-                }
-            }
-            if (componentInjection.getComponentClass() == Configuration.class) {
-                registerConfiguration(clazz, beanDefinition);
-            } else {
-                registerDI(clazz, beanDefinition);
-                // 添加Advisor增强器，进行方法增强
-                addAdvisors(clazz, advisors, beanName);
-            }
+            // 添加AOP增强器
+            addAdvisors(beanName, clazz, advisors);
         });
 
         // 注册Bean增强，此为AOP增强
         registerBeanPostProcessor(new AdvisorAutoProxyCreator(advisors, this));
         // 注册扫描出的Bean增强
         processComponentProperty(componentProperty -> {
-            ComponentInjection componentInjection = componentProperty.getComponentInjection();
+            InjectionProperty injectionProperty = componentProperty.getInjectionProperty();
             Class<?> clazz = componentProperty.getClazz();
             if (BeanPostProcessor.class.isAssignableFrom(clazz)) {
-                registerBeanPostProcessor((BeanPostProcessor) getBean(componentInjection.getBeanName()));
+                registerBeanPostProcessor((BeanPostProcessor) getBean(injectionProperty.getBeanName()));
             }
         }, Component.class);
 
         // 一次性加载所有单例的Bean对象
-        ThrowConsumer<Class<?>, Throwable> loadSingletonBeanConsumer = clazz -> {
-            ComponentInjection componentInjection = getComponentPropertyValue(clazz);
-            String beanName;
-            if (componentInjection == null || StringUtils.isBlank(beanName = componentInjection.getBeanName())) {
-                return;
-            }
+        processAllComponentProperty(componentProperty -> {
+            InjectionProperty injectionProperty = componentProperty.getInjectionProperty();
+            Class<?> clazz = componentProperty.getClazz();
+            String beanName = injectionProperty.getBeanName();
             BeanDefinition beanDefinition = getBeanDefinition(beanName);
             if (!clazz.isInterface() && beanDefinition != null && beanDefinition.isSingleton()) {
                 getBean(beanName);
             }
-        };
-        processScanClass(loadSingletonBeanConsumer);
+        });
+    }
+
+    /**
+     * 注册依赖关系
+     * @param componentProperty 组件
+     */
+    private void registerDI(ComponentProperty componentProperty) {
+        Class<?> clazz = componentProperty.getClazz();
+        InjectionProperty injectionProperty = componentProperty.getInjectionProperty();
+        String beanName = injectionProperty.getBeanName();
+        BeanDefinition beanDefinition = getBeanDefinition(beanName);
+        Constructor[] constructors = clazz.getDeclaredConstructors();
+        if (ArrayUtils.isNotEmpty(constructors)) {
+            if (constructors.length > 1) {
+                throw new RuntimeException(clazz.getSimpleName() + "存在多个构造函数");
+            }
+            Constructor constructor = constructors[0];
+            Class<?>[] parameterTypes = constructor.getParameterTypes();
+            if (ArrayUtils.isNotEmpty(parameterTypes)) {
+                List<Object> parameters = getParameterDIValues(parameterTypes);
+                beanDefinition.setArgumentValues(parameters);
+                beanDefinition.setConstructor(constructor);
+            }
+        }
+        if (injectionProperty.getComponentClass() == Configuration.class) {
+            registerConfiguration(clazz, beanDefinition);
+        } else {
+            registerBeanAndMethodDI(clazz, beanDefinition);
+        }
     }
 
     /**
@@ -316,10 +323,10 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     private Map<Class<?>, Set<ComponentProperty>> scanAllComponent() throws Throwable {
         Map<Class<?>, Set<ComponentProperty>> componentPropertyMap = new HashMap<>();
         processScanClass(clazz -> {
-            ComponentInjection componentInjection = getComponentPropertyValue(clazz);
-            if (componentInjection != null) {
-                ComponentProperty componentProperty = new ComponentProperty(clazz, componentInjection);
-                Class<?> componentClass = componentInjection.getComponentClass();
+            InjectionProperty injectionProperty = getComponentPropertyValue(clazz);
+            if (injectionProperty != null) {
+                ComponentProperty componentProperty = new ComponentProperty(clazz, injectionProperty);
+                Class<?> componentClass = injectionProperty.getComponentClass();
                 Set<ComponentProperty> componentPropertySet = componentPropertyMap
                         .computeIfAbsent(componentClass, it -> new HashSet<>());
                 componentPropertySet.add(componentProperty);
@@ -353,12 +360,12 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      *
      * @param clazz 类对象
      */
-    private void registerBeanDefinitionWithoutDI(Class<?> clazz, ComponentInjection componentInjection) {
+    private void registerBeanDefinitionWithoutDI(Class<?> clazz, InjectionProperty injectionProperty) {
         // 通过构造函数实例化Bean对象注册Bean信息
         BeanDefinition beanDefinition = new IocBeanDefinition();
         beanDefinition.setBeanClass(clazz);
         beanDefinition.setReturnType(clazz);
-        String beanName = componentInjection.getBeanName();
+        String beanName = injectionProperty.getBeanName();
         // 注册Bean的信息
         registerBeanDefinition(beanName, beanDefinition);
 
@@ -406,7 +413,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      * @param clazz    类对象
      * @param advisors Advisor增强器集合
      */
-    private void addAdvisors(Class<?> clazz, List<Advisor> advisors, String beanName) {
+    private void addAdvisors( String beanName, Class<?> clazz,List<Advisor> advisors) {
         Aspect aspect = clazz.getDeclaredAnnotation(Aspect.class);
         if (aspect == null) {
             return;
@@ -495,11 +502,11 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     }
 
     /**
-     * 注册Bean的依赖关系
+     * 注册Bean和方法的依赖关系
      *
      * @param clazz 类对象
      */
-    private void registerDI(Class<?> clazz, BeanDefinition iocBeanDefinition) {
+    private void registerBeanAndMethodDI(Class<?> clazz, BeanDefinition iocBeanDefinition) {
         if (iocBeanDefinition == null) {
             return;
         }
@@ -597,10 +604,10 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             return;
         }
         Class<?> clazz = field.getType();
-        ComponentInjection componentInjection = getComponentPropertyValue(clazz);
+        InjectionProperty injectionProperty = getComponentPropertyValue(clazz);
         String propertyBeanName = autowired.value();
         if (StringUtils.isBlank(propertyBeanName)) {
-            if (componentInjection == null || StringUtils.isBlank(propertyBeanName = componentInjection.getBeanName())) {
+            if (injectionProperty == null || StringUtils.isBlank(propertyBeanName = injectionProperty.getBeanName())) {
                 propertyBeanName = StringUtils.uncapitalize(field.getType().getSimpleName());
             }
         }
@@ -636,7 +643,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      * @param clazz 类对象
      * @return Bean名称
      */
-    private ComponentInjection getComponentPropertyValue(Class<?> clazz) {
+    private InjectionProperty getComponentPropertyValue(Class<?> clazz) {
         Class<?> componentValue = null;
         String componentName = null;
         if (clazz.isAnnotationPresent(Component.class)) {
@@ -670,6 +677,6 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         if (StringUtils.isBlank(componentName)) {
             componentName = StringUtils.uncapitalize(clazz.getSimpleName());
         }
-        return new ComponentInjection(componentName, componentValue);
+        return new InjectionProperty(componentName, componentValue);
     }
 }

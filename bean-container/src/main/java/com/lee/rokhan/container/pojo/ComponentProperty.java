@@ -20,5 +20,5 @@ public class ComponentProperty {
     /**
      * 注入的组件和属性
      */
-    private ComponentInjection componentInjection;
+    private InjectionProperty injectionProperty;
 }
