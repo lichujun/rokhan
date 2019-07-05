@@ -32,6 +32,10 @@ public interface BeanDefinition {
 
     void setBeanClass(Class<?> beanClass);
 
+    Class<?> getReturnType();
+
+    void setReturnType(Class<?> returnType);
+
     String getScope();
 
     void setScope(String scope);
@@ -90,6 +94,10 @@ public interface BeanDefinition {
     Object[] getArgumentRealValues(BeanFactory beanFactory) throws Throwable;
 
     default boolean validate() {
+        // 验证返回类型不为空
+        if (getReturnType() == null) {
+            return false;
+        }
         // 验证通过JDK动态代理合法
         if (getInvocationHandler() != null && ArrayUtils.isNotEmpty(getInterfaces())) {
             return true;

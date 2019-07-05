@@ -3,6 +3,8 @@ package com.lee.rokhan.container.factory;
 import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.processor.BeanPostProcessor;
 
+import java.util.Set;
+
 /**
  * 创建和获取Bean对象
  * @author lichujun
@@ -45,4 +47,11 @@ public interface BeanFactory {
      * @param beanPostProcessor 监视Bean的生命周期的对象
      */
     void registerBeanPostProcessor(BeanPostProcessor beanPostProcessor);
+
+    /**
+     * 通过接口类型获取实现的Bean对象的Bean名称
+     * @param type 接口类型
+     * @return Bean名称数组
+     */
+    Set<String> getBeanNamesByType(Class<?> type);
 }

@@ -3,3 +3,14 @@ scanPackages:
 
 test1:
   test: sdhsjd
+
+#jdbc配置文件
+datasource:
+  master:
+    driver: com.mysql.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=UTF8&autoReconnect=true
+    username: root
+    password: root
+    validationQuery: SELECT 1
+    mappers:
+      - com.lee.rokhan.demo.mapper

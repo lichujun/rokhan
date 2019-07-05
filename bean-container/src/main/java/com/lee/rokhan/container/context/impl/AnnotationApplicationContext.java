@@ -2,7 +2,6 @@ package com.lee.rokhan.container.context.impl;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.lee.rokhan.common.utils.CastUtils;
 import com.lee.rokhan.common.utils.ReflectionUtils;
 import com.lee.rokhan.common.utils.ScanUtils;
 import com.lee.rokhan.common.utils.throwable.ThrowConsumer;
@@ -43,6 +42,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Bean容器
@@ -59,14 +59,14 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     private final Set<Class<?>> classSet;
 
     /**
+     * 接口类型所实现的Bean对象的Bean名称
+     */
+    private final Map<Class<?>, Set<String>> typeToBeanNames = new ConcurrentHashMap<>();
+
+    /**
      * 组件属性
      */
     private final Map<Class<?>, Set<ComponentProperty>> componentPropertyMap;
-
-    /**
-     * 接口类型所实现的Bean对象的Bean名称
-     */
-    private final Map<Class<?>, Set<String>> typeToBeanNames = new HashMap<>();
 
     /**
      * 配置文件
@@ -95,6 +95,12 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         initContextAfter(contextPostProcessors);
     }
 
+    @Override
+    public void registerBeanDefinition(String beanName, BeanDefinition beanDefinition) {
+        Class<?> returnType = beanDefinition.getReturnType();
+        addTypeToName(beanName, returnType);
+        super.registerBeanDefinition(beanName, beanDefinition);
+    }
 
     /**
      * 初始化Ioc容器
@@ -226,6 +232,36 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         }
     }
 
+    @Override
+    public Set<String> getBeanNamesByType(Class<?> type) {
+        return typeToBeanNames.get(type);
+    }
+
+    /**
+     * 添加接口与它的实现的对应关系
+     * @param beanName Bean名称
+     * @param clazz 接口
+     */
+    private void addTypeToName(String beanName, Class<?> clazz) {
+        if (clazz.isInterface()) {
+            Set<String> beanNames = typeToBeanNames.computeIfAbsent(clazz, k -> new HashSet<>());
+            beanNames.add(beanName);
+        } else {
+            // 获取Bean对象实现的所有接口
+            Set<Class<?>> typeInterfaces = Optional.of(clazz)
+                    .map(ReflectionUtils::getInterfaces)
+                    .orElse(null);
+            if (typeInterfaces == null || CollectionUtils.isEmpty(typeInterfaces)) {
+                return;
+            }
+            // 将接口和它的所有实现注册到容器中
+            for (Class<?> typeInterface : typeInterfaces) {
+                Set<String> beanNames = typeToBeanNames.computeIfAbsent(typeInterface, k -> new HashSet<>());
+                beanNames.add(beanName);
+            }
+        }
+    }
+
     /**
      * 注册配置文件
      * @param beanDefinition Bean注册信息
@@ -245,8 +281,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 Set<Field> fields = ReflectionUtils.getDeclaredFields(clazz);
                 for (Field field : fields) {
                     if (!field.isAnnotationPresent(Autowired.class)) {
-                        String fieldJSON = node.getString(field.getName());
-                        Object fieldValue = CastUtils.convert(fieldJSON, field.getGenericType(), field.getType());
+                        Object fieldValue = node.getObject(field.getName(), field.getGenericType());
                         PropertyValue fieldProperty = new PropertyValue(field.getName(), fieldValue);
                         beanDefinition.addPropertyValue(fieldProperty);
                     }
@@ -294,65 +329,6 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         }
     }
 
-    @Override
-    public Set<String> getBeanNamesByType(Class<?> type) {
-        if (MapUtils.isEmpty(typeToBeanNames)) {
-            for (Class<?> clazz : classSet) {
-                if (clazz == null || clazz.isInterface()) {
-                    continue;
-                }
-                ComponentInjection componentInjection = getComponentPropertyValue(clazz);
-                String beanName;
-                if (componentInjection == null) {
-                    continue;
-                }
-                beanName = componentInjection.getBeanName();
-                if (StringUtils.isBlank(beanName)) {
-                    continue;
-                }
-                addTypeToName(clazz, beanName);
-                Set<Method> methods = ReflectionUtils.getDeclaredMethods(clazz);
-                for (Method method : methods) {
-                    Bean bean = method.getDeclaredAnnotation(Bean.class);
-                    if (bean != null) {
-                        Class<?> returnType = method.getReturnType();
-                        beanName = Optional.of(bean)
-                                .map(Bean::value)
-                                .filter(StringUtils::isNotBlank)
-                                .orElse(StringUtils.uncapitalize(returnType.getSimpleName()));
-                        addTypeToName(returnType, beanName);
-                    }
-                }
-            }
-        }
-        return typeToBeanNames.get(type);
-    }
-
-    /**
-     * 添加接口与它的实现的对应关系
-     * @param clazz 接口
-     * @param beanName Bean名称
-     */
-    private void addTypeToName(Class<?> clazz, String beanName) {
-        if (clazz.isInterface()) {
-            Set<String> beanNames = typeToBeanNames.computeIfAbsent(clazz, k -> new HashSet<>());
-            beanNames.add(beanName);
-        } else {
-            // 获取Bean对象实现的所有接口
-            Set<Class<?>> typeInterfaces = Optional.of(clazz)
-                    .map(ReflectionUtils::getInterfaces)
-                    .orElse(null);
-            if (typeInterfaces == null || CollectionUtils.isEmpty(typeInterfaces)) {
-                return;
-            }
-            // 将接口和它的所有实现注册到容器中
-            for (Class<?> typeInterface : typeInterfaces) {
-                Set<String> beanNames = typeToBeanNames.computeIfAbsent(typeInterface, k -> new HashSet<>());
-                beanNames.add(beanName);
-            }
-        }
-    }
-
     /**
      * 注册Bean的注册信息，不包含依赖关系
      *
@@ -362,6 +338,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         // 通过构造函数实例化Bean对象注册Bean信息
         BeanDefinition beanDefinition = new IocBeanDefinition();
         beanDefinition.setBeanClass(clazz);
+        beanDefinition.setReturnType(clazz);
         Constructor[] constructors = clazz.getDeclaredConstructors();
         if (ArrayUtils.isNotEmpty(constructors)) {
             if (constructors.length > 1) {
@@ -400,6 +377,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                     methodBeanDefinition.setFactoryBeanName(beanName);
                     methodBeanDefinition.setFactoryMethodName(method.getName());
                 }
+                methodBeanDefinition.setReturnType(returnType);
                 // 注册init方法和destroy方法
                 String initMethod = bean.initMethod();
                 String destroyMethod = bean.destroyMethod();
@@ -439,7 +417,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             if (pointcut != null) {
                 String expression = pointcut.value();
                 if (StringUtils.isNotBlank(expression)) {
-                    String pointcutName = method.getName() + "()";
+                    String pointcutName = method.getName() + ApplicationContextConstants.BRACKETS;
                     if (pointcutMap == null) {
                         pointcutMap = new HashMap<>();
                     }
@@ -482,6 +460,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 BeanDefinition beanDefinition = new IocBeanDefinition();
                 beanDefinition.setFactoryBeanName(beanName);
                 beanDefinition.setFactoryMethodName(method.getName());
+                beanDefinition.setReturnType(returnType);
                 registerBeanDefinition(adviceBeanName, beanDefinition);
             }
         }

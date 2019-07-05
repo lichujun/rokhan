@@ -28,6 +28,11 @@ public class IocBeanDefinition implements BeanDefinition {
     private Class<?> beanClass;
 
     /**
+     * 返回类型
+     */
+    private Class<?> returnType;
+
+    /**
      * scope类型
      */
     private String scope = BeanDefinition.SCOPE_SINGLETON;

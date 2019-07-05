@@ -17,4 +17,6 @@ public class ApplicationContextConstants {
 
     public static final String ENVIRONMENT = "environment";
 
+    public static final String BRACKETS = "()";
+
 }

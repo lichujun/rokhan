@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.lee.rokhan.demo.mapper.DemoMapper">
+
+    <select id="selectUserName" resultType="java.lang.String">
+        select user_name from user limit 1
+    </select>
+
+</mapper>

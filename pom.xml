@@ -29,6 +29,9 @@
         <maven.compile.version>2.3</maven.compile.version>
         <common.version>1.0-SNAPSHOT</common.version>
         <bean.container.version>1.0-SNAPSHOT</bean.container.version>
+        <mybatis.version>3.5.0</mybatis.version>
+        <mysql.version>5.1.47</mysql.version>
+        <druid.version>1.1.14</druid.version>
     </properties>
 
     <dependencyManagement>
@@ -73,6 +76,25 @@
                 <version>${aspectJ.version}</version>
             </dependency>
 
+            <!-- https://mvnrepository.com/artifact/org.mybatis/mybatis -->
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/com.alibaba/druid -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

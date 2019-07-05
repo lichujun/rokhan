@@ -5,6 +5,8 @@ import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.processor.ContextPostProcessor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * @author lichujun
@@ -15,12 +17,19 @@ public class MapperPostProcessor implements ContextPostProcessor {
 
     @Override
     public void postProcessBeforeInitialization(ApplicationContext context) throws Throwable {
-        MapperInvocationHandler mapperInvocationHandler = new MapperInvocationHandler();
-        Class<?>[] interfaces = {MapperInterface.class};
-        BeanDefinition beanDefinition = new IocBeanDefinition();
-        beanDefinition.setInterfaces(interfaces);
-        beanDefinition.setInvocationHandler(mapperInvocationHandler);
-        context.registerBeanDefinition("testMapper", beanDefinition);
+        context.processScanClass(clazz -> {
+            if (clazz.isAnnotationPresent(Mapper.class)) {
+                MapperInvocationHandler mapperInvocationHandler = new MapperInvocationHandler(clazz);
+                Class<?>[] interfaces = {clazz};
+                BeanDefinition beanDefinition = new IocBeanDefinition();
+                beanDefinition.setInterfaces(interfaces);
+                beanDefinition.setReturnType(clazz);
+                beanDefinition.setInvocationHandler(mapperInvocationHandler);
+                String beanName = StringUtils.uncapitalize(clazz.getSimpleName());
+                context.registerBeanDefinition(beanName, beanDefinition);
+            }
+        });
+
     }
 
     @Override
