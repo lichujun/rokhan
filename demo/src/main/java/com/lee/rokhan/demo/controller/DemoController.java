@@ -23,10 +23,10 @@ import javax.annotation.PostConstruct;
 @Aspect
 public class DemoController implements BeanNameAware, BeanFactoryAware, ApplicationContextAware {
 
-    @Autowired("demoService")
+    @Autowired("test")
     private DemoService demoService;
 
-    @Autowired("demoService")
+    @Autowired
     private DemoServiceImpl demoService1;
 
     @Autowired
@@ -39,6 +39,8 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
         this.demoService = demoService;
     }*/
 
+   private String name = "controller";
+
     @PostConstruct
     public void init() {
         System.out.println("init");
@@ -46,23 +48,27 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
 
     public String test() {
         demoService.test();
-        mapperInterface.doSome();
+        //mapperInterface.doSome();
         //demoService1.test();
-        return "老子返回了";
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void test1() {
         System.out.println("controller");
     }
 
-    @Pointcut("execution(* com.lee.rokhan.demo.service.*.test (..))")
+    @Pointcut("execution(* com.lee.rokhan.demo.contr*.*.test (..))")
     public void some() {
 
     }
 
     @After("some()")
     public MethodReturnAdvice createReturn() {
-        return (returnValue, method, args, target)  -> System.out.println("return" + returnValue);
+        return (returnValue, method, args, target)  -> System.out.println("return " + returnValue);
     }
 
     @Before("some()")
@@ -80,10 +86,10 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
         });
     }
 
-    @Bean
+    /*@Bean
     public DemoService getDemoService() {
         return new DemoServiceImpl();
-    }
+    }*/
 
     @Override
     public void setBeanName(String beanName) {
@@ -92,8 +98,8 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws Throwable {
-        DemoController demoController = (DemoController) beanFactory.getBean("demoController");
-        demoController.test();
+        //DemoController demoController = (DemoController) beanFactory.getBean("demoController");
+        //demoController.test();
 
     }
 

@@ -20,7 +20,10 @@ import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.factory.impl.IocBeanFactory;
 import com.lee.rokhan.container.pojo.BeanReference;
+import com.lee.rokhan.container.pojo.ComponentInjection;
+import com.lee.rokhan.container.pojo.ComponentProperty;
 import com.lee.rokhan.container.pojo.PropertyValue;
+import com.lee.rokhan.container.processor.BeanPostProcessor;
 import com.lee.rokhan.container.processor.ContextPostProcessor;
 import com.lee.rokhan.container.processor.impl.AdvisorAutoProxyCreator;
 import com.lee.rokhan.container.proxy.AopProxyFactories;
@@ -56,6 +59,11 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     private final Set<Class<?>> classSet;
 
     /**
+     * 组件属性
+     */
+    private final Map<Class<?>, Set<ComponentProperty>> componentPropertyMap;
+
+    /**
      * 接口类型所实现的Bean对象的Bean名称
      */
     private final Map<Class<?>, Set<String>> typeToBeanNames = new HashMap<>();
@@ -71,66 +79,42 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      * @throws IOException 扫描class文件IO异常
      */
     public AnnotationApplicationContext() throws Throwable {
+        // 加载Yaml配置文件
         yamlResource = new YamlResourceImpl();
-        // 获取需要扫描的包
-        JSONArray scanPackages = yamlResource.getYamlNodeArrayResource(ApplicationContextConstants.SCAN_PACKAGES);
-
-        // 如果扫描的包为空，则classSet设为空集合
-        if (scanPackages == null || scanPackages.isEmpty()) {
-            classSet = null;
-        }
-        // 如果扫描的包不为空，则扫描出所有class
-        else {
-            classSet = new HashSet<>();
-            for (Object scanPackage : scanPackages) {
-                Set<Class<?>> packageClassSet = ScanUtils.getClasses((String) scanPackage);
-                if (CollectionUtils.isNotEmpty(packageClassSet)) {
-                    classSet.addAll(packageClassSet);
-                }
-            }
-        }
-        List<ContextPostProcessor> contextPostProcessors = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(classSet)) {
-            for (Class<?> aClass : classSet) {
-                if (getComponentName(aClass) != null && ContextPostProcessor.class.isAssignableFrom(aClass) && !aClass.isInterface()) {
-                    contextPostProcessors.add((ContextPostProcessor) aClass.newInstance());
-                }
-            }
-        }
-        if (CollectionUtils.isNotEmpty(contextPostProcessors)) {
-            for (ContextPostProcessor contextPostProcessor : contextPostProcessors) {
-                contextPostProcessor.postProcessBeforeInitialization(this);
-            }
-        }
-        init();
-        if (CollectionUtils.isNotEmpty(contextPostProcessors)) {
-            for (ContextPostProcessor contextPostProcessor : contextPostProcessors) {
-                contextPostProcessor.postProcessAfterInitialization(this);
-            }
-        }
+        // 扫描所有的Class
+        classSet = scanAllClass();
+        // 扫描所有的组件
+        componentPropertyMap = scanAllComponent();
+        // 扫描所有上下文初始化增强
+        List<ContextPostProcessor> contextPostProcessors = scanAllContextPostProcessor();
+        // 应用上下文初始化前增强
+        initContextBefore(contextPostProcessors);
+        // 应用上下文初始化
+        initContext();
+        // 应用上下文初始化后增强
+        initContextAfter(contextPostProcessors);
     }
 
 
     /**
      * 初始化Ioc容器
      */
-    private void init() throws Throwable {
+    private void initContext() throws Throwable {
         if (CollectionUtils.isEmpty(classSet)) {
             return;
         }
         List<Advisor> advisors = new ArrayList<>();
-        for (Class<?> clazz : classSet) {
-            PropertyValue propertyValue = getComponentName(clazz);
-            String beanName;
-            if (propertyValue == null || StringUtils.isBlank(beanName = propertyValue.getName())) {
-                continue;
-            }
+        // 注册Bean的信息
+        processAllComponentProperty(componentProperty -> {
+            Class<?> clazz = componentProperty.getClazz();
+            ComponentInjection componentInjection = componentProperty.getComponentInjection();
+            String beanName = componentInjection.getBeanName();
             if (clazz.isInterface()) {
-                continue;
+                return;
             }
             // 注册未进行依赖注入的BeanDefinition
-            BeanDefinition beanDefinition = registerBeanDefinitionWithoutDI(clazz, propertyValue);
-            if (propertyValue.getValue() == Configuration.class) {
+            BeanDefinition beanDefinition = registerBeanDefinitionWithoutDI(clazz, componentInjection);
+            if (componentInjection.getComponentClass() == Configuration.class) {
                 registerConfiguration(beanDefinition, clazz);
             } else {
                 // 注册依赖关系
@@ -138,14 +122,24 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 // 添加Advisor增强器，进行方法增强
                 addAdvisors(clazz, advisors, beanName);
             }
-        }
+        });
+
+        // 注册Bean增强，此为AOP增强
         registerBeanPostProcessor(new AdvisorAutoProxyCreator(advisors, this));
+        // 注册扫描出的Bean增强
+        processComponentProperty(componentProperty -> {
+            ComponentInjection componentInjection = componentProperty.getComponentInjection();
+            Class<?> clazz = componentProperty.getClazz();
+            if (BeanPostProcessor.class.isAssignableFrom(clazz)) {
+                registerBeanPostProcessor((BeanPostProcessor) getBean(componentInjection.getBeanName()));
+            }
+        }, Component.class);
 
         // 一次性加载所有单例的Bean对象
         ThrowConsumer<Class<?>, Throwable> loadSingletonBeanConsumer = clazz -> {
-            PropertyValue propertyValue = getComponentName(clazz);
+            ComponentInjection componentInjection = getComponentPropertyValue(clazz);
             String beanName;
-            if (propertyValue == null || StringUtils.isBlank(beanName = propertyValue.getName())) {
+            if (componentInjection == null || StringUtils.isBlank(beanName = componentInjection.getBeanName())) {
                 return;
             }
             BeanDefinition beanDefinition = getBeanDefinition(beanName);
@@ -157,13 +151,78 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
     }
 
     /**
-     * 处理扫描出的所有Class对象
-     * @param consumer 处理
+     * 扫描所有上下文初始化增强
+     * @return 所有上下文初始化增强
+     * @throws Throwable 异常
      */
+    private List<ContextPostProcessor> scanAllContextPostProcessor() throws Throwable {
+        List<ContextPostProcessor> contextPostProcessors = new ArrayList<>();
+        processComponentProperty(componentProperty -> {
+            Class<?> clazz = componentProperty.getClazz();
+            if (ContextPostProcessor.class.isAssignableFrom(clazz) && !clazz.isInterface()) {
+                contextPostProcessors.add((ContextPostProcessor) clazz.newInstance());
+            }
+        }, Component.class);
+        return contextPostProcessors;
+    }
+
+    /**
+     * 应用上下文初始化前增强
+     * @throws Throwable 异常
+     */
+    private void initContextBefore(List<ContextPostProcessor> contextPostProcessors) throws Throwable {
+        if (CollectionUtils.isNotEmpty(contextPostProcessors)) {
+            for (ContextPostProcessor contextPostProcessor : contextPostProcessors) {
+                contextPostProcessor.postProcessBeforeInitialization(this);
+            }
+        }
+    }
+
+    /**
+     * 应用上下文初始化后增强
+     * @throws Throwable 异常
+     */
+    private void initContextAfter(List<ContextPostProcessor> contextPostProcessors) throws Throwable {
+        if (CollectionUtils.isNotEmpty(contextPostProcessors)) {
+            for (ContextPostProcessor contextPostProcessor : contextPostProcessors) {
+                contextPostProcessor.postProcessAfterInitialization(this);
+            }
+        }
+    }
+
+
     @Override
     public void processScanClass(ThrowConsumer<Class<?>, Throwable> consumer) throws Throwable {
         for (Class<?> clazz : classSet) {
             consumer.accept(clazz);
+        }
+    }
+
+    @Override
+    public void processComponentProperty(ThrowConsumer<ComponentProperty, Throwable> consumer, Class<?> componentClass) throws Throwable {
+        if (MapUtils.isEmpty(componentPropertyMap)) {
+            return;
+        }
+        Set<ComponentProperty> componentPropertySet = componentPropertyMap.get(componentClass);
+        if (CollectionUtils.isNotEmpty(componentPropertySet)) {
+            for (ComponentProperty componentProperty : componentPropertySet) {
+                consumer.accept(componentProperty);
+            }
+        }
+    }
+
+    @Override
+    public void processAllComponentProperty(ThrowConsumer<ComponentProperty, Throwable> consumer) throws Throwable {
+        if (MapUtils.isEmpty(componentPropertyMap)) {
+            return;
+        }
+        for (Map.Entry<Class<?>, Set<ComponentProperty>> componentPropertyEntry : componentPropertyMap.entrySet()) {
+            Set<ComponentProperty> componentPropertySet = componentPropertyEntry.getValue();
+            if (CollectionUtils.isNotEmpty(componentPropertySet)) {
+                for (ComponentProperty componentProperty : componentPropertySet) {
+                    consumer.accept(componentProperty);
+                }
+            }
         }
     }
 
@@ -196,6 +255,45 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         }
     }
 
+    /**
+     * 扫描所有组件
+     * @throws Throwable 异常
+     */
+    private Map<Class<?>, Set<ComponentProperty>> scanAllComponent() throws Throwable {
+        Map<Class<?>, Set<ComponentProperty>> componentPropertyMap = new HashMap<>();
+        processScanClass(clazz -> {
+            ComponentInjection componentInjection = getComponentPropertyValue(clazz);
+            if (componentInjection != null) {
+                ComponentProperty componentProperty = new ComponentProperty(clazz, componentInjection);
+                Class<?> componentClass = componentInjection.getComponentClass();
+                Set<ComponentProperty> componentPropertySet = componentPropertyMap
+                        .computeIfAbsent(componentClass, it -> new HashSet<>());
+                componentPropertySet.add(componentProperty);
+            }
+        });
+        return componentPropertyMap;
+    }
+
+    private Set<Class<?>> scanAllClass() throws IOException {
+        // 获取需要扫描的包
+        JSONArray scanPackages = yamlResource.getYamlNodeArrayResource(ApplicationContextConstants.SCAN_PACKAGES);
+        // 如果扫描的包为空，则classSet设为空集合
+        if (scanPackages == null || scanPackages.isEmpty()) {
+            return null;
+        }
+        // 如果扫描的包不为空，则扫描出所有class
+        else {
+            Set<Class<?>> classSet = new HashSet<>();
+            for (Object scanPackage : scanPackages) {
+                Set<Class<?>> packageClassSet = ScanUtils.getClasses((String) scanPackage);
+                if (CollectionUtils.isNotEmpty(packageClassSet)) {
+                    classSet.addAll(packageClassSet);
+                }
+            }
+            return classSet;
+        }
+    }
+
     @Override
     public Set<String> getBeanNamesByType(Class<?> type) {
         if (MapUtils.isEmpty(typeToBeanNames)) {
@@ -203,12 +301,12 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 if (clazz == null || clazz.isInterface()) {
                     continue;
                 }
-                PropertyValue propertyValue = getComponentName(clazz);
+                ComponentInjection componentInjection = getComponentPropertyValue(clazz);
                 String beanName;
-                if (propertyValue == null) {
+                if (componentInjection == null) {
                     continue;
                 }
-                beanName = propertyValue.getName();
+                beanName = componentInjection.getBeanName();
                 if (StringUtils.isBlank(beanName)) {
                     continue;
                 }
@@ -260,7 +358,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      *
      * @param clazz 类对象
      */
-    private BeanDefinition registerBeanDefinitionWithoutDI(Class<?> clazz, PropertyValue propertyValue) {
+    private BeanDefinition registerBeanDefinitionWithoutDI(Class<?> clazz, ComponentInjection componentInjection) {
         // 通过构造函数实例化Bean对象注册Bean信息
         BeanDefinition beanDefinition = new IocBeanDefinition();
         beanDefinition.setBeanClass(clazz);
@@ -277,7 +375,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
                 beanDefinition.setConstructor(constructor);
             }
         }
-        String beanName = propertyValue.getName();
+        String beanName = componentInjection.getBeanName();
         // 注册Bean的信息
         registerBeanDefinition(beanName, beanDefinition);
 
@@ -511,10 +609,10 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             return;
         }
         Class<?> clazz = field.getType();
-        PropertyValue property = getComponentName(clazz);
+        ComponentInjection componentInjection = getComponentPropertyValue(clazz);
         String propertyBeanName = autowired.value();
         if (StringUtils.isBlank(propertyBeanName)) {
-            if (property == null || StringUtils.isBlank(propertyBeanName = property.getName())) {
+            if (componentInjection == null || StringUtils.isBlank(propertyBeanName = componentInjection.getBeanName())) {
                 propertyBeanName = StringUtils.uncapitalize(field.getType().getSimpleName());
             }
         }
@@ -550,8 +648,8 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      * @param clazz 类对象
      * @return Bean名称
      */
-    private PropertyValue getComponentName(Class<?> clazz) {
-        Object componentValue = null;
+    private ComponentInjection getComponentPropertyValue(Class<?> clazz) {
+        Class<?> componentValue = null;
         String componentName = null;
         if (clazz.isAnnotationPresent(Component.class)) {
             Component component = clazz.getDeclaredAnnotation(Component.class);
@@ -584,7 +682,6 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         if (StringUtils.isBlank(componentName)) {
             componentName = StringUtils.uncapitalize(clazz.getSimpleName());
         }
-        return new PropertyValue(componentName, componentValue);
+        return new ComponentInjection(componentName, componentValue);
     }
-
 }

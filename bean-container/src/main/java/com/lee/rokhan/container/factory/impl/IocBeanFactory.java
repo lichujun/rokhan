@@ -1,5 +1,6 @@
 package com.lee.rokhan.container.factory.impl;
 
+import com.lee.rokhan.common.utils.ReflectionUtils;
 import com.lee.rokhan.container.aware.ApplicationContextAware;
 import com.lee.rokhan.container.aware.BeanFactoryAware;
 import com.lee.rokhan.container.aware.BeanNameAware;
@@ -165,6 +166,7 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
             // 进行依赖注入
             setPropertyDIValues(beanDefinition, beanObject);
             Class<?> beanObjectClass = beanObject.getClass();
+            // 对实现了Aware接口的Bean设置外界属性
             if (BeanNameAware.class.isAssignableFrom(beanObjectClass)) {
                 ((BeanNameAware) beanObject).setBeanName(beanName);
             }
@@ -197,7 +199,7 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
      */
     private void doInit(Object beanObject, BeanDefinition beanDefinition) throws Throwable {
         if (StringUtils.isNotBlank(beanDefinition.getInitMethodName())) {
-            Method method = beanObject.getClass().getDeclaredMethod(beanDefinition.getInitMethodName());
+            Method method = ReflectionUtils.getDeclaredMethod(beanObject.getClass(), beanDefinition.getInitMethodName());
             if (method != null) {
                 method.invoke(beanObject);
             }
@@ -216,9 +218,11 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
             if (beanDefinition.isSingleton() && StringUtils.isNotBlank(beanDefinition.getDestroyMethodName())) {
                 Object instance = this.singletonObjects.get(beanName);
                 try {
-                    Method method = instance.getClass().getDeclaredMethod(beanDefinition.getDestroyMethodName());
-                    method.invoke(instance);
-                } catch (NoSuchMethodException | SecurityException | IllegalAccessException
+                    Method method = ReflectionUtils.getDeclaredMethod(instance.getClass(), beanDefinition.getDestroyMethodName());
+                    if (method != null) {
+                        method.invoke(instance);
+                    }
+                } catch (SecurityException | IllegalAccessException
                         | IllegalArgumentException | InvocationTargetException e) {
                     log.error("执行bean[" + beanName + "] " + beanDefinition + "的销毁方法异常", e);
                 }
