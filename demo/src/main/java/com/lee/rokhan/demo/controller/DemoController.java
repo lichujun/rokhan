@@ -30,6 +30,10 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
     @Autowired
     private DemoServiceImpl demoService1;
 
+    public DemoController(DemoServiceImpl demoService1) {
+        this.demoService1 = demoService1;
+    }
+
     @Autowired
     private SqlSessionFactoryUtils sqlSessionFactoryUtils;
 

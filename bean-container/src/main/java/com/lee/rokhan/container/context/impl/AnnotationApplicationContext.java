@@ -114,16 +114,35 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
         processAllComponentProperty(componentProperty -> {
             Class<?> clazz = componentProperty.getClazz();
             ComponentInjection componentInjection = componentProperty.getComponentInjection();
-            String beanName = componentInjection.getBeanName();
             if (clazz.isInterface()) {
                 return;
             }
             // 注册未进行依赖注入的BeanDefinition
-            BeanDefinition beanDefinition = registerBeanDefinitionWithoutDI(clazz, componentInjection);
+            registerBeanDefinitionWithoutDI(clazz, componentInjection);
+        });
+
+        // 注册依赖关系
+        processAllComponentProperty(componentProperty -> {
+            Class<?> clazz = componentProperty.getClazz();
+            ComponentInjection componentInjection = componentProperty.getComponentInjection();
+            String beanName = componentInjection.getBeanName();
+            BeanDefinition beanDefinition = getBeanDefinition(beanName);
+            Constructor[] constructors = clazz.getDeclaredConstructors();
+            if (ArrayUtils.isNotEmpty(constructors)) {
+                if (constructors.length > 1) {
+                    throw new RuntimeException(clazz.getSimpleName() + "存在多个构造函数");
+                }
+                Constructor constructor = constructors[0];
+                Class<?>[] parameterTypes = constructor.getParameterTypes();
+                if (ArrayUtils.isNotEmpty(parameterTypes)) {
+                    List<Object> parameters = getParameterDIValues(parameterTypes);
+                    beanDefinition.setArgumentValues(parameters);
+                    beanDefinition.setConstructor(constructor);
+                }
+            }
             if (componentInjection.getComponentClass() == Configuration.class) {
-                registerConfiguration(beanDefinition, clazz);
+                registerConfiguration(clazz, beanDefinition);
             } else {
-                // 注册依赖关系
                 registerDI(clazz, beanDefinition);
                 // 添加Advisor增强器，进行方法增强
                 addAdvisors(clazz, advisors, beanName);
@@ -267,7 +286,7 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      * @param beanDefinition Bean注册信息
      * @param clazz 类对象
      */
-    private void registerConfiguration(BeanDefinition beanDefinition, Class<?> clazz) {
+    private void registerConfiguration(Class<?> clazz, BeanDefinition beanDefinition) {
         if (beanDefinition != null) {
             String configurationNode = clazz.getDeclaredAnnotation(Configuration.class).value();
             JSONObject node;
@@ -334,24 +353,11 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
      *
      * @param clazz 类对象
      */
-    private BeanDefinition registerBeanDefinitionWithoutDI(Class<?> clazz, ComponentInjection componentInjection) {
+    private void registerBeanDefinitionWithoutDI(Class<?> clazz, ComponentInjection componentInjection) {
         // 通过构造函数实例化Bean对象注册Bean信息
         BeanDefinition beanDefinition = new IocBeanDefinition();
         beanDefinition.setBeanClass(clazz);
         beanDefinition.setReturnType(clazz);
-        Constructor[] constructors = clazz.getDeclaredConstructors();
-        if (ArrayUtils.isNotEmpty(constructors)) {
-            if (constructors.length > 1) {
-                throw new RuntimeException(clazz.getSimpleName() + "存在多个构造函数");
-            }
-            Constructor constructor = constructors[0];
-            Class<?>[] parameterTypes = constructor.getParameterTypes();
-            if (ArrayUtils.isNotEmpty(parameterTypes)) {
-                List<Object> parameters = getParameterDIValues(parameterTypes);
-                beanDefinition.setArgumentValues(parameters);
-                beanDefinition.setConstructor(constructor);
-            }
-        }
         String beanName = componentInjection.getBeanName();
         // 注册Bean的信息
         registerBeanDefinition(beanName, beanDefinition);
@@ -392,7 +398,6 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             // 注册init方法和destroy方法
             registerInitAndDestroy(beanDefinition, method);
         }
-        return beanDefinition;
     }
 
     /**
@@ -545,7 +550,11 @@ public class AnnotationApplicationContext extends IocBeanFactory implements Appl
             String parameterBeanName;
             Autowired autowired = parameterType.getDeclaredAnnotation(Autowired.class);
             if (autowired == null || StringUtils.isBlank(autowired.value())) {
-                parameterBeanName = getDIValueByType(parameterType);
+                if (parameterType.isInterface()) {
+                    parameterBeanName = getDIValueByType(parameterType);
+                } else {
+                    parameterBeanName = StringUtils.uncapitalize(parameterType.getSimpleName());
+                }
             } else {
                 parameterBeanName = autowired.value();
             }
