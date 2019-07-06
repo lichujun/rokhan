@@ -5,6 +5,7 @@ import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.pojo.ComponentProperty;
 import com.lee.rokhan.container.pojo.InjectionProperty;
+import com.lee.rokhan.container.processor.BeanPostProcessor;
 
 import java.util.Set;
 
@@ -84,4 +85,17 @@ public interface ApplicationContext extends BeanFactory {
      * 初始化扫描Class
      */
     void initScanClass() throws Throwable;
+
+    /**
+     * 通过接口类型获取实现的Bean对象的Bean名称
+     * @param type 接口类型
+     * @return Bean名称数组
+     */
+    Set<String> getBeanNamesByType(Class<?> type);
+
+    /**
+     * 注册监视Bean的生命周期的对象
+     * @param beanPostProcessor 监视Bean的生命周期的对象
+     */
+    void registerBeanPostProcessor(BeanPostProcessor beanPostProcessor);
 }

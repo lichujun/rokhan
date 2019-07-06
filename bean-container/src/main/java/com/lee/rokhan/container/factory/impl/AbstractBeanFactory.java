@@ -5,14 +5,13 @@ import com.lee.rokhan.container.aware.ApplicationContextAware;
 import com.lee.rokhan.container.aware.BeanFactoryAware;
 import com.lee.rokhan.container.aware.BeanNameAware;
 import com.lee.rokhan.container.context.ApplicationContext;
+import com.lee.rokhan.container.definition.BeanDefinition;
+import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.instance.BeanInstance;
 import com.lee.rokhan.container.instance.BeanInstances;
 import com.lee.rokhan.container.pojo.BeanReference;
 import com.lee.rokhan.container.pojo.PropertyValue;
-import com.lee.rokhan.container.definition.BeanDefinition;
-import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.processor.BeanPostProcessor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,20 +23,15 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Ioc实例工厂
- *
+ * Bean工厂抽象类
  * @author lichujun
- * @date 2019/6/17 11:38
+ * @date 2019/7/6 14:01
  */
 @Slf4j
-@NoArgsConstructor
-public abstract class IocBeanFactory implements BeanFactory, Closeable {
+public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
 
     // 考虑并发情况，默认256，防止扩容
     private static final int DEFAULT_SIZE = 256;
-
-    // 存放Bean注册信息的容器
-    private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
 
     // 存放Bean对象的容器，一级缓存
     private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
@@ -45,8 +39,16 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
     // Bean对象的二级缓存
     private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
 
+    // 存放Bean注册信息的容器
+    private final Map<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>(DEFAULT_SIZE);
+
     // Bean初始化前后处理
     private final List<BeanPostProcessor> beanPostProcessors = Collections.synchronizedList(new ArrayList<>());
+
+    @Override
+    public void registerBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
+        beanPostProcessors.add(beanPostProcessor);
+    }
 
 
     @Override
@@ -79,17 +81,55 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
         return beanDefinitionMap.keySet().contains(beanName);
     }
 
+    /**
+     * 执行单例实例的销毁方法
+     */
     @Override
-    public void registerBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
-        beanPostProcessors.add(beanPostProcessor);
+    public void close() {
+        // 遍历map把bean都取出来然后调用每个bean的销毁方法
+        for (Map.Entry<String, BeanDefinition> entry : this.beanDefinitionMap.entrySet()) {
+            String beanName = entry.getKey();
+            BeanDefinition beanDefinition = entry.getValue();
+            if (beanDefinition.isSingleton() && StringUtils.isNotBlank(beanDefinition.getDestroyMethodName())) {
+                Object instance = this.singletonObjects.get(beanName);
+                try {
+                    Method method = ReflectionUtils.getDeclaredMethod(instance.getClass(), beanDefinition.getDestroyMethodName());
+                    if (method != null) {
+                        method.invoke(instance);
+                    }
+                } catch (SecurityException | IllegalAccessException
+                        | IllegalArgumentException | InvocationTargetException e) {
+                    log.error("执行bean[" + beanName + "] " + beanDefinition + "的销毁方法异常", e);
+                }
+            }
+        }
     }
 
-    @Override
-    public Object getBean(String beanName) throws Throwable {
-        Objects.requireNonNull(beanName, "注册Bean需要输入beanName");
-        return doGetBean(beanName);
+    /**
+     * Bean初始化前的处理
+     */
+    private Object applyPostProcessBeforeInitialization(Object bean, String beanName) throws Throwable {
+        if (CollectionUtils.isEmpty(beanPostProcessors)) {
+            return bean;
+        }
+        for (BeanPostProcessor bpp : beanPostProcessors) {
+            bean = bpp.postProcessBeforeInitialization(bean, beanName);
+        }
+        return bean;
     }
 
+    /**
+     * Bean初始化后的处理
+     */
+    private Object applyPostProcessAfterInitialization(Object bean, String beanName) throws Throwable {
+        if (CollectionUtils.isEmpty(beanPostProcessors)) {
+            return bean;
+        }
+        for (BeanPostProcessor bpp : beanPostProcessors) {
+            bean = bpp.postProcessAfterInitialization(bean, beanName);
+        }
+        return bean;
+    }
     /**
      * 对Bean对象进行依赖注入
      * @param beanDefinition Bean注册信息
@@ -117,13 +157,19 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
             }
             // 进行依赖注入
             else if (fieldValue instanceof BeanReference) {
-                realFieldValue = doGetBean(((BeanReference) fieldValue).getBeanName());
+                realFieldValue = getBean(((BeanReference) fieldValue).getBeanName());
             }
             else {
                 realFieldValue = fieldValue;
             }
             field.set(beanObject, realFieldValue);
         }
+    }
+
+    @Override
+    public Object getBean(String beanName) throws Throwable {
+        Objects.requireNonNull(beanName, "注册Bean需要输入beanName");
+        return doGetBean(beanName);
     }
 
     /**
@@ -138,7 +184,7 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
         if (beanObject != null) {
             return beanObject;
         }
-        BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
+        BeanDefinition beanDefinition = getBeanDefinition(beanName);
         if (earlySingletonObjects.keySet().contains(beanName)) {
             beanObject = earlySingletonObjects.get(beanName);
         } else {
@@ -206,53 +252,4 @@ public abstract class IocBeanFactory implements BeanFactory, Closeable {
         }
     }
 
-    /**
-     * 执行单例实例的销毁方法
-     */
-    @Override
-    public void close() {
-        // 遍历map把bean都取出来然后调用每个bean的销毁方法
-        for (Map.Entry<String, BeanDefinition> entry : this.beanDefinitionMap.entrySet()) {
-            String beanName = entry.getKey();
-            BeanDefinition beanDefinition = entry.getValue();
-            if (beanDefinition.isSingleton() && StringUtils.isNotBlank(beanDefinition.getDestroyMethodName())) {
-                Object instance = this.singletonObjects.get(beanName);
-                try {
-                    Method method = ReflectionUtils.getDeclaredMethod(instance.getClass(), beanDefinition.getDestroyMethodName());
-                    if (method != null) {
-                        method.invoke(instance);
-                    }
-                } catch (SecurityException | IllegalAccessException
-                        | IllegalArgumentException | InvocationTargetException e) {
-                    log.error("执行bean[" + beanName + "] " + beanDefinition + "的销毁方法异常", e);
-                }
-            }
-        }
-    }
-
-    /**
-     * Bean初始化前的处理
-     */
-    private Object applyPostProcessBeforeInitialization(Object bean, String beanName) throws Throwable {
-        if (CollectionUtils.isEmpty(beanPostProcessors)) {
-            return bean;
-        }
-        for (BeanPostProcessor bpp : beanPostProcessors) {
-            bean = bpp.postProcessBeforeInitialization(bean, beanName);
-        }
-        return bean;
-    }
-
-    /**
-     * Bean初始化后的处理
-     */
-    private Object applyPostProcessAfterInitialization(Object bean, String beanName) throws Throwable {
-        if (CollectionUtils.isEmpty(beanPostProcessors)) {
-            return bean;
-        }
-        for (BeanPostProcessor bpp : beanPostProcessors) {
-            bean = bpp.postProcessAfterInitialization(bean, beanName);
-        }
-        return bean;
-    }
 }

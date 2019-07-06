@@ -8,7 +8,7 @@ import com.lee.rokhan.container.annotation.Autowired;
 import com.lee.rokhan.container.annotation.Component;
 import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.definition.BeanDefinition;
-import com.lee.rokhan.container.factory.impl.IocBeanFactory;
+import com.lee.rokhan.container.factory.impl.AbstractBeanFactory;
 import com.lee.rokhan.container.pojo.BeanReference;
 import com.lee.rokhan.container.pojo.ComponentProperty;
 import com.lee.rokhan.container.pojo.InjectionProperty;
@@ -27,7 +27,7 @@ import java.util.*;
  * @author lichujun
  * @date 2019/7/6 10:24
  */
-public abstract class AbstractApplicationContext extends IocBeanFactory implements ApplicationContext {
+public abstract class AbstractApplicationContext extends AbstractBeanFactory implements ApplicationContext {
 
     /**
      * 应用上下文初始化前后增强

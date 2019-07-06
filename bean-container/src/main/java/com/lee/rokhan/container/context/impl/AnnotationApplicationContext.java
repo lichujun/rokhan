@@ -12,7 +12,6 @@ import com.lee.rokhan.container.annotation.*;
 import com.lee.rokhan.container.annotation.Component;
 import com.lee.rokhan.container.constants.ApplicationContextConstants;
 import com.lee.rokhan.container.constants.ResourceConstants;
-import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.definition.impl.IocBeanDefinition;
 import com.lee.rokhan.container.pojo.BeanReference;
@@ -37,13 +36,13 @@ import java.util.*;
 import java.util.List;
 
 /**
- * Bean容器
+ * 使用yaml配置文件,使用注解的应用上下文
  *
  * @author lichujun
  * @date 2019/6/25 16:30
  */
 @Slf4j
-public class AnnotationApplicationContext extends AbstractApplicationContext implements ApplicationContext {
+public class AnnotationApplicationContext extends AbstractApplicationContext {
 
     /**
      * 配置文件
