@@ -4,6 +4,7 @@ import com.lee.rokhan.container.annotation.Autowired;
 import com.lee.rokhan.container.annotation.Bean;
 import com.lee.rokhan.container.annotation.Service;
 import com.lee.rokhan.demo.controller.DemoController;
+import com.lee.rokhan.demo.controller.TestController;
 import com.lee.rokhan.demo.service.DemoService;
 
 /**
@@ -14,17 +15,15 @@ import com.lee.rokhan.demo.service.DemoService;
 public class DemoServiceImpl extends DemoServiceBaseImpl {
 
     @Autowired
-    private DemoController demoController;
-
-
+    private TestController testController;
 
 
     public void test1() {
-        demoController.test1();
+        testController.test1();
     }
 
-    @Bean(value = "test", initMethod = "test")
+    /*@Bean(value = "test", initMethod = "test")
     public DemoService test2() {
         return this;
-    }
+    }*/
 }

@@ -1,5 +1,6 @@
 package com.lee.rokhan.container.instance.impl;
 
+import com.lee.rokhan.common.utils.ReflectionUtils;
 import com.lee.rokhan.container.definition.BeanDefinition;
 
 import java.lang.reflect.Constructor;
@@ -62,7 +63,7 @@ public class IocDetermine extends AbstractDetermine {
         }
         String methodName = beanDefinition.getFactoryMethodName();
         if (args == null) {
-            return type.getMethod(methodName);
+            return ReflectionUtils.getDeclaredMethod(type, methodName);
         }
         Method method;
         // 对于原型bean,从第二次开始获取bean实例时，可直接获得第一次缓存的构造方法。

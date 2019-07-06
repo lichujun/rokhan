@@ -274,7 +274,7 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
         // 注册扫描出的Bean增强
         registerAllBeanPostProcessor();
         // 一次性加载所有单例的Bean对象
-        loadSingletonBean();
+        //loadSingletonBean();
     }
 
     /**

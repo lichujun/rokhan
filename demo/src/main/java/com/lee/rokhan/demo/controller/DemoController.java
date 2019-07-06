@@ -24,7 +24,7 @@ import javax.annotation.PostConstruct;
 @Aspect
 public class DemoController implements BeanNameAware, BeanFactoryAware, ApplicationContextAware {
 
-    @Autowired("test")
+    @Autowired
     private DemoService demoService;
 
     @Autowired
@@ -66,14 +66,24 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
         this.name = name;
     }
 
-    public void test1() {
+    public String test1() {
         System.out.println("controller");
+        return "controller1";
     }
 
     @Pointcut("execution(* com.lee.rokhan.demo.contr*.*.test (..))")
     public void some() {
 
     }
+
+    @Pointcut("execution(* com.lee.rokhan.demo.contr*.*.test1 (..))")
+    private void some1() {}
+
+    @After("some1()")
+    public MethodReturnAdvice createReturn1() {
+        return (returnValue, method, args, target)  -> System.out.println("return1 " + returnValue);
+    }
+
 
     @After("some()")
     public MethodReturnAdvice createReturn() {

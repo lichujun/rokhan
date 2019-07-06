@@ -37,7 +37,7 @@ public class FactoryBeanMethodInstance extends IocDetermine implements BeanInsta
         Objects.requireNonNull(factoryBean, "工厂Bean：factoryBean不能为空");
 
         Object[] args = beanDefinition.getArgumentRealValues(beanFactory);
-        Class<?> factoryBeanClass = factoryBean.getClass();
+        Class<?> factoryBeanClass = beanDefinition.getReturnType();
         Method method = determineMethod(beanDefinition, args, factoryBeanClass);
         method.setAccessible(true);
         return method.invoke(factoryBean, args);
