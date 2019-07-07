@@ -18,6 +18,7 @@ import com.lee.rokhan.container.pojo.BeanReference;
 import com.lee.rokhan.container.pojo.InjectionProperty;
 import com.lee.rokhan.container.pojo.ComponentProperty;
 import com.lee.rokhan.container.pojo.PropertyValue;
+import com.lee.rokhan.container.proxy.AopProxyFactories;
 import com.lee.rokhan.container.resource.YamlResource;
 import com.lee.rokhan.container.resource.impl.YamlResourceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -175,6 +176,7 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
                     methodBeanDefinition.setDestroyMethodName(destroyMethod);
                 }
                 registerBeanDefinition(beanValue, methodBeanDefinition);
+                AopProxyFactories.getDefaultAopProxyFactory().addClassBeanName(beanName);
             }
             // 注册init方法和destroy方法
             registerInitAndDestroy(beanDefinition, method);
@@ -209,6 +211,7 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
                     }
                     pointcutMap.put(pointcutName, expression);
                 }
+                AopProxyFactories.getDefaultAopProxyFactory().addClassBeanName(beanName);
             }
         }
         if (MapUtils.isEmpty(pointcutMap)) {
@@ -248,6 +251,7 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
                 beanDefinition.setFactoryMethodName(method.getName());
                 beanDefinition.setReturnType(returnType);
                 registerBeanDefinition(adviceBeanName, beanDefinition);
+                AopProxyFactories.getDefaultAopProxyFactory().addClassBeanName(beanName);
             }
         }
     }

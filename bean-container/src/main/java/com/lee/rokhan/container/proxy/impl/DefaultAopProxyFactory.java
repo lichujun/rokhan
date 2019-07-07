@@ -4,6 +4,8 @@ import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.proxy.AopProxy;
 import com.lee.rokhan.container.proxy.AopProxyFactory;
+import org.apache.commons.lang3.ArrayUtils;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +34,11 @@ public class DefaultAopProxyFactory implements AopProxyFactory {
     }
 
     private boolean shouldUseJDKDynamicProxy(Object bean, String beanName) {
+        Class<?> beanClass = bean.getClass();
+        Class<?>[] interfaces = beanClass.getInterfaces();
+        if (ArrayUtils.isEmpty(interfaces)) {
+            return false;
+        }
         return !classBeanNames.contains(beanName);
     }
 
