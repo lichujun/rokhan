@@ -117,8 +117,8 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
 
     @Override
     public void setBeanFactory(BeanFactory beanFactory) throws Throwable {
-        //DemoController demoController = (DemoController) beanFactory.getBean("demoController");
-        //demoController.test();
+        /*DemoController demoController = (DemoController) beanFactory.getBean("demoController");
+        demoController.test();*/
 
     }
 

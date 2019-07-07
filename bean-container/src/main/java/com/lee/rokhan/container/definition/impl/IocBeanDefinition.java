@@ -8,7 +8,6 @@ import lombok.Data;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,16 +71,6 @@ public class IocBeanDefinition implements BeanDefinition {
      * 依赖
      */
     private List<PropertyValue> propertyValues;
-
-    /**
-     * 实现的所有接口
-     */
-    private Class<?>[] interfaces;
-
-    /**
-     * JDK动态代理
-     */
-    private InvocationHandler invocationHandler;
 
     /**
      * 工厂方法

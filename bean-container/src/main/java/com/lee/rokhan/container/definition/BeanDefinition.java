@@ -2,10 +2,8 @@ package com.lee.rokhan.container.definition;
 
 import com.lee.rokhan.container.factory.BeanFactory;
 import com.lee.rokhan.container.pojo.PropertyValue;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -77,14 +75,6 @@ public interface BeanDefinition {
 
     void addPropertyValue(PropertyValue propertyValue);
 
-    Class<?>[] getInterfaces();
-
-    void setInterfaces(Class<?>[] interfaces);
-
-    InvocationHandler getInvocationHandler();
-
-    void setInvocationHandler(InvocationHandler invocationHandler);
-
     /**
      * 获取方法的参数对象列表
      * @param beanFactory Bean工厂
@@ -97,10 +87,6 @@ public interface BeanDefinition {
         // 验证返回类型不为空
         if (getReturnType() == null) {
             return false;
-        }
-        // 验证通过JDK动态代理合法
-        if (getInvocationHandler() != null && ArrayUtils.isNotEmpty(getInterfaces())) {
-            return true;
         }
         // class没指定,工厂bean或工厂method不指定皆为不合法情况
         if (getBeanClass() == null) {

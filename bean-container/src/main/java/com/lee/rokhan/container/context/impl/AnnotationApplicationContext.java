@@ -78,9 +78,8 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
         }
         if (injectionProperty.getComponentClass() == Configuration.class) {
             registerConfiguration(clazz, beanDefinition);
-        } else {
-            registerBeanAndMethodDI(clazz, beanDefinition);
         }
+        registerBeanAndMethodDI(clazz, beanDefinition);
     }
 
     /**

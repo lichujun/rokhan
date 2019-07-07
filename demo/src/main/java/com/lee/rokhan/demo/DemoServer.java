@@ -3,6 +3,7 @@ package com.lee.rokhan.demo;
 import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.container.context.impl.AnnotationApplicationContext;
 import com.lee.rokhan.demo.controller.DemoController;
+import com.lee.rokhan.demo.controller.TestController;
 import com.lee.rokhan.demo.service.impl.DemoServiceImpl;
 
 /**
@@ -16,7 +17,20 @@ public class DemoServer {
         ApplicationContext context = new AnnotationApplicationContext();
         //((DemoController) context.getBean("demoController")).test();
 
-        ((DemoServiceImpl) context.getBean("demoServiceImpl")).test1();
+        //((DemoServiceImpl) context.getBean("demoServiceImpl")).test1();
+
+        DemoController demoController = (DemoController) context.getBean("demoController");
+        demoController.test();
+
+        TestController testController = (TestController) context.getBean("testController");
+
+        DemoServiceImpl demoService = ((DemoServiceImpl) context.getBean("demoServiceImpl"));
+
+
+
+
+        demoService.test1();
+
     }
 
 }
