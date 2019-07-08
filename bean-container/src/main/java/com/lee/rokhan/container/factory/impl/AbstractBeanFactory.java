@@ -182,54 +182,59 @@ public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
     private Object doGetBean(String beanName) throws Throwable {
         // 先从Bean对象容器里去取值，如果获取为空，则创建对象
         Object beanObject = singletonObjects.get(beanName);
-        if (beanObject != null) {
-            return beanObject;
-        }
-        BeanDefinition beanDefinition = getBeanDefinition(beanName);
-        if (earlySingletonObjects.keySet().contains(beanName)) {
+
+        // 同步，remove操作造成获取到null，造成空指针异常
+        synchronized (this) {
+            if (beanObject != null) {
+                earlySingletonObjects.remove(beanName);
+                return beanObject;
+            }
             beanObject = earlySingletonObjects.get(beanName);
-        } else {
-            Objects.requireNonNull(beanDefinition, "Bean名称为" + beanName + "的beanDefinition为空");
-            Class<?> beanClass = beanDefinition.getBeanClass();
-            // 获取实例生成器
-            BeanInstance beanInstance;
-            if (beanClass != null) {
-                if (StringUtils.isBlank(beanDefinition.getFactoryMethodName())) {
-                    // 使用构造函数的实例生成器
-                    beanInstance = BeanInstances.getConstructorInstance();
-                } else {
-                    // 使用工厂方法的实例生成器
-                    beanInstance = BeanInstances.getFactoryMethodInstance();
-                }
-            } else {
-                // 使用工厂Bean的实例生成器
-                beanInstance = BeanInstances.getFactoryBeanInstance();
+            if (beanObject != null) {
+                return beanObject;
             }
-            // 实例化对象
-            beanObject = beanInstance.instance(beanDefinition, this);
-            earlySingletonObjects.put(beanName, beanObject);
-            // 进行依赖注入
-            setPropertyDIValues(beanDefinition, beanObject);
-            Class<?> beanObjectClass = beanObject.getClass();
-            // 对实现了Aware接口的Bean设置外界属性
-            if (BeanNameAware.class.isAssignableFrom(beanObjectClass)) {
-                ((BeanNameAware) beanObject).setBeanName(beanName);
-            }
-            if (BeanFactoryAware.class.isAssignableFrom(beanObjectClass)) {
-                ((BeanFactoryAware) beanObject).setBeanFactory(this);
-            }
-            if (ApplicationContextAware.class.isAssignableFrom(beanObjectClass)) {
-                ((ApplicationContextAware) beanObject).setApplicationContext((ApplicationContext) this);
-            }
-            // 初始化对象之前处理
-            beanObject = applyPostProcessBeforeInitialization(beanObject, beanName);
-            // 对象初始化
-            doInit(beanObject, beanDefinition);
-            // 初始化对象之后的处理
-            beanObject = applyPostProcessAfterInitialization(beanObject, beanName);
-            setLatestDI(beanName, beanObject);
         }
 
+        BeanDefinition beanDefinition = getBeanDefinition(beanName);
+        Objects.requireNonNull(beanDefinition, "Bean名称为" + beanName + "的beanDefinition为空");
+        Class<?> beanClass = beanDefinition.getBeanClass();
+        // 获取实例生成器
+        BeanInstance beanInstance;
+        if (beanClass != null) {
+            if (StringUtils.isBlank(beanDefinition.getFactoryMethodName())) {
+                // 使用构造函数的实例生成器
+                beanInstance = BeanInstances.getConstructorInstance();
+            } else {
+                // 使用工厂方法的实例生成器
+                beanInstance = BeanInstances.getFactoryMethodInstance();
+            }
+        } else {
+            // 使用工厂Bean的实例生成器
+            beanInstance = BeanInstances.getFactoryBeanInstance();
+        }
+        // 实例化对象
+        beanObject = beanInstance.instance(beanDefinition, this);
+        earlySingletonObjects.put(beanName, beanObject);
+        // 进行依赖注入
+        setPropertyDIValues(beanDefinition, beanObject);
+        Class<?> beanObjectClass = beanObject.getClass();
+        // 对实现了Aware接口的Bean设置外界属性
+        if (BeanNameAware.class.isAssignableFrom(beanObjectClass)) {
+            ((BeanNameAware) beanObject).setBeanName(beanName);
+        }
+        if (BeanFactoryAware.class.isAssignableFrom(beanObjectClass)) {
+            ((BeanFactoryAware) beanObject).setBeanFactory(this);
+        }
+        if (ApplicationContextAware.class.isAssignableFrom(beanObjectClass)) {
+            ((ApplicationContextAware) beanObject).setApplicationContext((ApplicationContext) this);
+        }
+        // 初始化对象之前处理
+        beanObject = applyPostProcessBeforeInitialization(beanObject, beanName);
+        // 对象初始化
+        doInit(beanObject, beanDefinition);
+        // 初始化对象之后的处理
+        beanObject = applyPostProcessAfterInitialization(beanObject, beanName);
+        setLatestDI(beanName, beanObject);
         // 如果是单例模式，则缓存到Map容器
         if (beanDefinition.isSingleton()) {
             singletonObjects.put(beanName, beanObject);
