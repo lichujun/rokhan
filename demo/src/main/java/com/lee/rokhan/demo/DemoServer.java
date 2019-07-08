@@ -19,8 +19,8 @@ public class DemoServer {
 
         //((DemoServiceImpl) context.getBean("demoServiceImpl")).test1();
 
-        DemoController demoController = (DemoController) context.getBean("demoController");
-        demoController.test();
+        /*DemoController demoController = (DemoController) context.getBean("demoController");
+        demoController.test();*/
         DemoServiceImpl demoService = ((DemoServiceImpl) context.getBean("demoServiceImpl"));
 
         TestController testController = (TestController) context.getBean("testController");

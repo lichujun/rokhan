@@ -183,16 +183,13 @@ public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
         // 先从Bean对象容器里去取值，如果获取为空，则创建对象
         Object beanObject = singletonObjects.get(beanName);
 
-        // 同步，remove操作造成获取到null，造成空指针异常
-        synchronized (this) {
-            if (beanObject != null) {
-                earlySingletonObjects.remove(beanName);
-                return beanObject;
-            }
-            beanObject = earlySingletonObjects.get(beanName);
-            if (beanObject != null) {
-                return beanObject;
-            }
+        if (beanObject != null) {
+            earlySingletonObjects.remove(beanName);
+            return beanObject;
+        }
+        beanObject = earlySingletonObjects.get(beanName);
+        if (beanObject != null) {
+            return beanObject;
         }
 
         BeanDefinition beanDefinition = getBeanDefinition(beanName);
@@ -235,6 +232,7 @@ public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
         // 初始化对象之后的处理
         beanObject = applyPostProcessAfterInitialization(beanObject, beanName);
         setLatestDI(beanName, beanObject);
+        earlySingletonObjects.remove(beanName);
         // 如果是单例模式，则缓存到Map容器
         if (beanDefinition.isSingleton()) {
             singletonObjects.put(beanName, beanObject);

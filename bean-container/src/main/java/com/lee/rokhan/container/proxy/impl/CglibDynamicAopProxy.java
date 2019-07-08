@@ -60,7 +60,7 @@ public class CglibDynamicAopProxy implements AopProxy, MethodInterceptor {
         try {
             constructor = superClass.getDeclaredConstructor();
         } catch (NoSuchMethodException | SecurityException e) {
-            log.warn("获取构造方法发生异常");
+            // 什么都不做
         }
         if (constructor != null) {
             return ENHANCER.create();
