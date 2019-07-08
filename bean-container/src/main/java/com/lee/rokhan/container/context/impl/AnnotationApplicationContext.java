@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.List;
 
@@ -102,14 +101,13 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
                 for (Field field : fields) {
                     if (!field.isAnnotationPresent(Autowired.class)) {
                         Object fieldValue = node.getObject(field.getName(), field.getGenericType());
-                        PropertyValue fieldProperty = new PropertyValue(field.getName(), fieldValue);
+                        PropertyValue fieldProperty = new PropertyValue(field.getName(), fieldValue, null);
                         beanDefinition.addPropertyValue(fieldProperty);
                     }
                 }
             }
         }
     }
-
 
     /**
      * 通过yaml文件扫描所有Class文件
@@ -154,16 +152,8 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
                     beanValue = StringUtils.uncapitalize(returnType.getSimpleName());
                 }
                 BeanDefinition methodBeanDefinition = new IocBeanDefinition();
-                // 静态工厂方法注册Bean信息
-                if (Modifier.isStatic(method.getModifiers())) {
-                    methodBeanDefinition.setBeanClass(clazz);
-                    methodBeanDefinition.setFactoryMethodName(method.getName());
-                }
-                // 工厂Bean的方法注册Bean信息
-                else {
-                    methodBeanDefinition.setFactoryBeanName(beanName);
-                    methodBeanDefinition.setFactoryMethodName(method.getName());
-                }
+                methodBeanDefinition.setFactoryBeanName(beanName);
+                methodBeanDefinition.setFactoryMethodName(method.getName());
                 methodBeanDefinition.setReturnType(returnType);
                 // 注册init方法和destroy方法
                 String initMethod = bean.initMethod();

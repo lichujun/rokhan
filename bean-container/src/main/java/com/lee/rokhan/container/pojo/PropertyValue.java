@@ -12,12 +12,14 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PropertyValue {
     /**
-     * Bean名称
+     * Field名称
      */
     private final String name;
 
     /**
-     * Bean对象
+     * Field对象
      */
     private final Object value;
+
+    private String beanName;
 }

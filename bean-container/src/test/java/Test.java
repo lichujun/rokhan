@@ -1,8 +1,10 @@
+import com.lee.rokhan.common.utils.ReflectionUtils;
 import lombok.AllArgsConstructor;
 import net.sf.cglib.proxy.Enhancer;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
@@ -13,6 +15,8 @@ public class Test {
 
     private static final Enhancer ENHANCER = new Enhancer();
 
+    private String name;
+
     public static void main(String[] args1) throws Throwable {
 
         Test test = new Test();
@@ -21,11 +25,14 @@ public class Test {
         ENHANCER.setSuperclass(superClass);
         ENHANCER.setInterfaces(test.getClass().getInterfaces());
         ENHANCER.setCallback(testCglib);
-        ((Test)ENHANCER.create()).test();
+        Object obj = ENHANCER.create();
+        //Field field = ReflectionUtils.getDeclaredField(obj, "name");
+        ReflectionUtils.setFieldValue(test, "name", "hello");
+        ((Test) obj).test();
     }
 
     public void test() {
-
+        System.out.println(name);
     }
 
     @AllArgsConstructor
@@ -36,7 +43,7 @@ public class Test {
         @Override
         public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
             System.out.println("proxy");
-            return realObject;
+            return method.invoke(realObject, objects);
         }
     }
 }

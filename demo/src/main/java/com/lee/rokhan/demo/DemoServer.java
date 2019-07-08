@@ -21,16 +21,15 @@ public class DemoServer {
 
         DemoController demoController = (DemoController) context.getBean("demoController");
         demoController.test();
-
-        TestController testController = (TestController) context.getBean("testController");
-
         DemoServiceImpl demoService = ((DemoServiceImpl) context.getBean("demoServiceImpl"));
 
+        TestController testController = (TestController) context.getBean("testController");
 
 
 
         demoService.test1();
 
+        //testController.test1();
     }
 
 }

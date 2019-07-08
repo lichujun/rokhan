@@ -1,7 +1,6 @@
 package com.lee.rokhan.demo.controller;
 
-import com.lee.rokhan.container.annotation.Autowired;
-import com.lee.rokhan.container.annotation.Controller;
+import com.lee.rokhan.container.annotation.*;
 import com.lee.rokhan.demo.service.impl.DemoServiceImpl;
 
 /**
@@ -9,6 +8,7 @@ import com.lee.rokhan.demo.service.impl.DemoServiceImpl;
  * @date 2019/7/6 18:10
  */
 @Controller
+@Aspect
 public class TestController {
 
     @Autowired
@@ -22,5 +22,4 @@ public class TestController {
         demoService.test();
         return "test controller";
     }
-
 }

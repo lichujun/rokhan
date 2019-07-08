@@ -1,6 +1,7 @@
 package com.lee.rokhan.container.factory.impl;
 
 import com.lee.rokhan.common.utils.ReflectionUtils;
+import com.lee.rokhan.common.utils.throwable.ThrowBiConsumer;
 import com.lee.rokhan.container.aware.ApplicationContextAware;
 import com.lee.rokhan.container.aware.BeanFactoryAware;
 import com.lee.rokhan.container.aware.BeanNameAware;
@@ -226,6 +227,7 @@ public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
             doInit(beanObject, beanDefinition);
             // 初始化对象之后的处理
             beanObject = applyPostProcessAfterInitialization(beanObject, beanName);
+            setLatestDI(beanName, beanObject);
         }
 
         // 如果是单例模式，则缓存到Map容器
@@ -248,6 +250,52 @@ public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
                 method.invoke(beanObject);
             }
         }
+    }
+
+    @Override
+    public void processAllBeanDefinition(ThrowBiConsumer<String, BeanDefinition, Throwable> throwBiConsumer) throws Throwable {
+        for (Map.Entry<String, BeanDefinition> beanDefinitionEntry : beanDefinitionMap.entrySet()) {
+            throwBiConsumer.accept(beanDefinitionEntry.getKey(), beanDefinitionEntry.getValue());
+        }
+    }
+
+    @Override
+    public void processAllBean(ThrowBiConsumer<String, Object, Throwable> throwBiConsumer) throws Throwable {
+        for (Map.Entry<String, Object> objectEntry : singletonObjects.entrySet()) {
+            throwBiConsumer.accept(objectEntry.getKey(), objectEntry.getValue());
+        }
+    }
+
+    @Override
+    public void processAllEarlyBean(ThrowBiConsumer<String, Object, Throwable> throwBiConsumer) throws Throwable {
+        for (Map.Entry<String, Object> objectEntry : earlySingletonObjects.entrySet()) {
+            throwBiConsumer.accept(objectEntry.getKey(), objectEntry.getValue());
+        }
+    }
+
+    /**
+     * 设置最新依赖
+     */
+    private void setLatestDI(String diBeanName, Object diBeanObject) throws Throwable {
+        processAllEarlyBean((beanName, beanObject) -> {
+            BeanDefinition beanDefinition = getBeanDefinition(beanName);
+            if (beanDefinition == null) {
+                return;
+            }
+            List<PropertyValue> propertyValues = beanDefinition.getPropertyValues();
+            if (CollectionUtils.isEmpty(propertyValues)) {
+                return;
+            }
+            for (PropertyValue propertyValue : propertyValues) {
+                String fieldBeanName = propertyValue.getBeanName();
+                if (StringUtils.isBlank(fieldBeanName)) {
+                    continue;
+                }
+                if (diBeanName.equals(fieldBeanName)) {
+                    ReflectionUtils.setFieldValue(beanObject, propertyValue.getName(), diBeanObject);
+                }
+            }
+        });
     }
 
 }

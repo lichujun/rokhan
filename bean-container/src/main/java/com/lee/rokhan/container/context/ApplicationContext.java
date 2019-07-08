@@ -98,4 +98,6 @@ public interface ApplicationContext extends BeanFactory {
      * @param beanPostProcessor 监视Bean的生命周期的对象
      */
     void registerBeanPostProcessor(BeanPostProcessor beanPostProcessor);
+
+
 }

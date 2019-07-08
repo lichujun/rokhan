@@ -71,12 +71,12 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
         return "controller1";
     }
 
-    @Pointcut("execution(* com.lee.rokhan.demo.contr*.*.test (..))")
+    @Pointcut("execution(* com.lee.rokhan.demo..*.test (..))")
     public void some() {
 
     }
 
-    @Pointcut("execution(* com.lee.rokhan.demo.contr*.*.test1 (..))")
+    @Pointcut("execution(* com.lee.rokhan.demo..*.test1 (..))")
     private void some1() {}
 
     @After("some1()")

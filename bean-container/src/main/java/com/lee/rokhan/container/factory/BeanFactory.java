@@ -1,5 +1,6 @@
 package com.lee.rokhan.container.factory;
 
+import com.lee.rokhan.common.utils.throwable.ThrowBiConsumer;
 import com.lee.rokhan.container.definition.BeanDefinition;
 import com.lee.rokhan.container.processor.BeanPostProcessor;
 
@@ -45,4 +46,19 @@ public interface BeanFactory {
      * @param beanPostProcessor 监视Bean的生命周期的对象
      */
     void registerBeanPostProcessor(BeanPostProcessor beanPostProcessor);
+
+    /**
+     * 处理所有的Bean的注册信息
+     */
+    void processAllBeanDefinition(ThrowBiConsumer<String, BeanDefinition, Throwable> throwBiConsumer) throws Throwable;
+
+    /**
+     * 处理所有Bean对象
+     */
+    void processAllBean(ThrowBiConsumer<String, Object, Throwable> throwBiConsumer) throws Throwable;
+
+    /**
+     * 处理二级缓存对象
+     */
+    void processAllEarlyBean(ThrowBiConsumer<String, Object, Throwable> throwBiConsumer) throws Throwable;
 }

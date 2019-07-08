@@ -3,6 +3,7 @@ package com.lee.rokhan.container.context.impl;
 import com.lee.rokhan.common.utils.ReflectionUtils;
 import com.lee.rokhan.common.utils.ScanUtils;
 import com.lee.rokhan.common.utils.throwable.ThrowConsumer;
+import com.lee.rokhan.container.advice.Advice;
 import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.annotation.Autowired;
 import com.lee.rokhan.container.annotation.Component;
@@ -217,12 +218,8 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
      * @throws Throwable 异常
      */
     private void loadSingletonBean() throws Throwable {
-        processAllComponentProperty(componentProperty -> {
-            InjectionProperty injectionProperty = componentProperty.getInjectionProperty();
-            Class<?> clazz = componentProperty.getClazz();
-            String beanName = injectionProperty.getBeanName();
-            BeanDefinition beanDefinition = getBeanDefinition(beanName);
-            if (!clazz.isInterface() && beanDefinition != null && beanDefinition.isSingleton()) {
+        processAllBeanDefinition((beanName, beanDefinition) -> {
+            if (beanDefinition.isSingleton()) {
                 getBean(beanName);
             }
         });
@@ -273,8 +270,22 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
         registerBeanPostProcessor(new AdvisorAutoProxyCreator(advisors, this));
         // 注册扫描出的Bean增强
         registerAllBeanPostProcessor();
+        // 加载增强器
+        loadAdvisors();
         // 一次性加载所有单例的Bean对象
-        loadSingletonBean();
+        // loadSingletonBean();
+    }
+
+    /**
+     * 加载所有增强器
+     * @throws Throwable 异常
+     */
+    private void loadAdvisors() throws Throwable {
+        processAllBeanDefinition((beanName, beanDefinition) -> {
+            if (Advice.class.isAssignableFrom(beanDefinition.getReturnType())) {
+                getBean(beanName);
+            }
+        });
     }
 
     /**
@@ -310,7 +321,7 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
             propertyBeanName = getDIValueByType(field.getType());
         }
         BeanReference beanReference = new BeanReference(propertyBeanName);
-        PropertyValue propertyValue = new PropertyValue(field.getName(), beanReference);
+        PropertyValue propertyValue = new PropertyValue(field.getName(), beanReference, propertyBeanName);
         beanDefinition.addPropertyValue(propertyValue);
     }
 
@@ -334,7 +345,7 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
             }
         }
         BeanReference beanReference = new BeanReference(propertyBeanName);
-        PropertyValue propertyValue = new PropertyValue(field.getName(), beanReference);
+        PropertyValue propertyValue = new PropertyValue(field.getName(), beanReference, propertyBeanName);
         beanDefinition.addPropertyValue(propertyValue);
         AopProxyFactories.getDefaultAopProxyFactory().addClassBeanName(propertyBeanName);
     }
