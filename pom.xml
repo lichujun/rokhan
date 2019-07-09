@@ -12,6 +12,7 @@
         <module>common</module>
         <module>bean-container</module>
         <module>demo</module>
+        <module>vertx-web</module>
     </modules>
 
     <properties>
@@ -32,6 +33,7 @@
         <mybatis.version>3.5.0</mybatis.version>
         <mysql.version>5.1.47</mysql.version>
         <druid.version>1.1.14</druid.version>
+        <vertx.web.version>1.0-SNAPSHOT</vertx.web.version>
     </properties>
 
     <dependencyManagement>
@@ -40,6 +42,12 @@
                 <groupId>com.lee</groupId>
                 <artifactId>common</artifactId>
                 <version>${common.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.lee</groupId>
+                <artifactId>vertx-web</artifactId>
+                <version>${vertx.web.version}</version>
             </dependency>
 
             <dependency>

@@ -120,10 +120,15 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
         // 获取需要扫描的包
         JSONArray scanPackages = yamlResource.getYamlNodeArrayResource(ApplicationContextConstants.SCAN_PACKAGES);
         // 如果扫描的包为空，则classSet设为空集合
+        Set<String> packageNames;
         if (scanPackages != null && !scanPackages.isEmpty()) {
-            Set<String> packageNames = new HashSet<>(scanPackages.toJavaList(String.class));
-            scanClass(packageNames);
+             packageNames = new HashSet<>(scanPackages.toJavaList(String.class));
+            // 添加默认扫描包
+            packageNames.addAll(ApplicationContextConstants.DEFAULT_PACKAGES);
+        } else {
+            packageNames = ApplicationContextConstants.DEFAULT_PACKAGES;
         }
+        scanClass(packageNames);
     }
 
     /**

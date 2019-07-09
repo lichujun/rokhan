@@ -213,17 +213,6 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
         }, Component.class);
     }
 
-    /**
-     * 一次性加载所有单例的Bean对象
-     * @throws Throwable 异常
-     */
-    private void loadSingletonBean() throws Throwable {
-        processAllBeanDefinition((beanName, beanDefinition) -> {
-            if (beanDefinition.isSingleton()) {
-                getBean(beanName);
-            }
-        });
-    }
 
     /**
      * 添加依赖关系，并添加AOP增强器
@@ -272,8 +261,6 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
         registerAllBeanPostProcessor();
         // 加载增强器
         loadAdvisors();
-        // 一次性加载所有单例的Bean对象
-        // loadSingletonBean();
     }
 
     /**

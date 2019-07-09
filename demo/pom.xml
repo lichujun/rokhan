@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>com.lee</groupId>
-            <artifactId>bean-container</artifactId>
+            <artifactId>vertx-web</artifactId>
         </dependency>
 
         <dependency>

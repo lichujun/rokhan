@@ -184,7 +184,6 @@ public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
         Object beanObject = singletonObjects.get(beanName);
 
         if (beanObject != null) {
-            earlySingletonObjects.remove(beanName);
             return beanObject;
         }
         beanObject = earlySingletonObjects.get(beanName);

@@ -5,6 +5,7 @@ import com.lee.rokhan.container.context.impl.AnnotationApplicationContext;
 import com.lee.rokhan.demo.controller.DemoController;
 import com.lee.rokhan.demo.controller.TestController;
 import com.lee.rokhan.demo.service.impl.DemoServiceImpl;
+import com.lee.rokhan.vertx.web.server.VertxWebServer;
 
 /**
  * @author lichujun
@@ -14,22 +15,23 @@ public class DemoServer {
 
     public static void main(String[] args) throws Throwable {
 
-        ApplicationContext context = new AnnotationApplicationContext();
+        new VertxWebServer().startServer();
+        // ApplicationContext context = new AnnotationApplicationContext();
         //((DemoController) context.getBean("demoController")).test();
 
         //((DemoServiceImpl) context.getBean("demoServiceImpl")).test1();
 
         /*DemoController demoController = (DemoController) context.getBean("demoController");
         demoController.test();*/
-        DemoServiceImpl demoService = ((DemoServiceImpl) context.getBean("demoServiceImpl"));
+        /*DemoServiceImpl demoService = ((DemoServiceImpl) context.getBean("demoServiceImpl"));
 
-        TestController testController = (TestController) context.getBean("testController");
+        TestController testController = (TestController) context.getBean("testController");*/
 
 
 
-        demoService.test1();
+        // demoService.test1();
 
-        //testController.test1();
+        // testController.test1();
     }
 
 }

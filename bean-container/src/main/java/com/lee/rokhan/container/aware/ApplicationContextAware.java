@@ -13,5 +13,5 @@ public interface ApplicationContextAware extends Aware {
      * 设置应用上下文
      * @param applicationContext  应用上下文
      */
-    void setApplicationContext(ApplicationContext applicationContext);
+    void setApplicationContext(ApplicationContext applicationContext) throws Throwable;
 }
