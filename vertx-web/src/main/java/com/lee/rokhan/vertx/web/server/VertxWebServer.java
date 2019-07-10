@@ -30,6 +30,7 @@ public class VertxWebServer implements WebServer {
         ApplicationContext applicationContext = new AnnotationApplicationContext();
 
         VertxWebContext vertxWebContext = (VertxWebContext) applicationContext.getBean("vertxWebContext");
+        
 
         // 启动work-verticle线程组
         for (int i = 0; i < 16; i++) {
@@ -43,7 +44,7 @@ public class VertxWebServer implements WebServer {
 
         // 启动event loop线程组
         for (int i = 0; i < 4; i++) {
-            EventLoopVerticle eventLoopVerticle = new EventLoopVerticle(applicationContext, vertxWebContext);
+            EventLoopVerticle eventLoopVerticle = new EventLoopVerticle(vertxWebContext);
             vertx.deployVerticle(eventLoopVerticle);
         }
     }

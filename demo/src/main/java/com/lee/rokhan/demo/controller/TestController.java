@@ -6,6 +6,7 @@ import com.lee.rokhan.vertx.web.annotation.Header;
 import com.lee.rokhan.vertx.web.annotation.RequestMapping;
 import com.lee.rokhan.vertx.web.pojo.RequestMethod;
 import io.vertx.core.MultiMap;
+import lombok.Data;
 
 /**
  * @author lichujun
@@ -23,8 +24,8 @@ public class TestController {
     }
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String test() {
+    public TestController test() {
         demoService.test();
-        return "test controller";
+        return this;
     }
 }

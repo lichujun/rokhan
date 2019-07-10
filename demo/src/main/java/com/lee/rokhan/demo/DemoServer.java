@@ -12,10 +12,9 @@ import com.lee.rokhan.vertx.web.server.VertxWebServer;
  * @date 2019/6/25 13:56
  */
 public class DemoServer {
-
     public static void main(String[] args) throws Throwable {
-
         new VertxWebServer().startServer();
+
         // ApplicationContext context = new AnnotationApplicationContext();
         //((DemoController) context.getBean("demoController")).test();
 

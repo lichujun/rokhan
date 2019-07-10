@@ -1,7 +1,6 @@
 package com.lee.rokhan.vertx.web.verticle;
 
 import com.alibaba.fastjson.JSON;
-import com.lee.rokhan.container.context.ApplicationContext;
 import com.lee.rokhan.vertx.web.codec.HttpRequest;
 import com.lee.rokhan.vertx.web.codec.HttpResponse;
 import com.lee.rokhan.vertx.web.context.VertxWebContext;
@@ -12,6 +11,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerOptions;
 import io.vertx.ext.web.Router;
@@ -32,12 +32,9 @@ public class EventLoopVerticle extends AbstractVerticle {
 
     private Router router;
 
-    private ApplicationContext applicationContext;
-
     private VertxWebContext vertxWebContext;
 
-    public EventLoopVerticle(ApplicationContext applicationContext, VertxWebContext vertxWebContext) {
-        this.applicationContext = applicationContext;
+    public EventLoopVerticle(VertxWebContext vertxWebContext) {
         this.router = Router.router(vertx);
         this.vertxWebContext = vertxWebContext;
     }
@@ -113,11 +110,12 @@ public class EventLoopVerticle extends AbstractVerticle {
      */
     private void sendMessage(EventBus eb, String path, Object msg, RoutingContext rc) {
         eb.send(path, msg, res -> {
-            HttpResponse<String> httpResponse = AsyncResultUtils.transResponse(res);
+            HttpResponse httpResponse = AsyncResultUtils.transResponse(res);
             if (HttpResponseStatus.OK.equals(httpResponse.getStatus())) {
                 rc.response()
                         .putHeader("Content-type", "text/plain;charset=UTF-8")
-                        .end(httpResponse.getResponse());
+                        .end(Buffer.buffer(JSON.toJSONBytes(httpResponse.getResponse())))
+                        ;
             } else {
                 HttpResponseStatus status = httpResponse.getStatus();
                 if (status == null) {
