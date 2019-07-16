@@ -31,8 +31,7 @@ public class AopProxyUtils {
     public static Object applyAdvices(Object target, Method method, Object[] args,
                                       List<Advisor> matchAdvisors, Object proxy, BeanFactory beanFactory) throws Throwable {
         // 1、获取要对当前方法进行增强的advice
-        List<Object> advices = AopProxyUtils.getShouldApplyAdvices(target, method, matchAdvisors,
-                beanFactory);
+        List<Object> advices = AopProxyUtils.getShouldApplyAdvices(target, method, matchAdvisors, beanFactory);
         // 2、如有增强的advice，责任链式增强执行
         if (CollectionUtils.isEmpty(advices)) {
             return method.invoke(target, args);

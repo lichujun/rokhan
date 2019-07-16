@@ -14,8 +14,6 @@ import com.lee.rokhan.demo.service.DemoService;
 @Service
 public class DemoServiceImpl extends DemoServiceBaseImpl {
 
-    private Integer age = 12;
-
     @Autowired
     private TestController testController;
 

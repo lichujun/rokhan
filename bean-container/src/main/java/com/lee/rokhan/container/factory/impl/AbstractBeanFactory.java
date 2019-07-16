@@ -16,7 +16,6 @@ import com.lee.rokhan.container.processor.BeanPostProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import java.io.Closeable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -29,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2019/7/6 14:01
  */
 @Slf4j
-public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
+public abstract class AbstractBeanFactory implements BeanFactory, AutoCloseable {
 
     // 考虑并发情况，默认256，防止扩容
     private static final int DEFAULT_SIZE = 256;
@@ -109,27 +108,29 @@ public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
     /**
      * Bean初始化前的处理
      */
-    private Object applyPostProcessBeforeInitialization(Object bean, String beanName) throws Throwable {
+    private Object applyPostProcessBeforeInitialization(String beanName, Object beanObject, Class<?> objectClass) throws Throwable {
         if (CollectionUtils.isEmpty(beanPostProcessors)) {
-            return bean;
+            return beanObject;
         }
         for (BeanPostProcessor bpp : beanPostProcessors) {
-            bean = bpp.postProcessBeforeInitialization(bean, beanName);
+            beanObject = bpp.postProcessBeforeInitialization(beanName, beanObject, objectClass);
         }
-        return bean;
+        return beanObject;
     }
 
     /**
      * Bean初始化后的处理
      */
-    private Object applyPostProcessAfterInitialization(Object bean, String beanName) throws Throwable {
+    private Object applyPostProcessAfterInitialization(String beanName, Object beanObject, Class<?> objectClass) throws Throwable {
         if (CollectionUtils.isEmpty(beanPostProcessors)) {
-            return bean;
+            return beanObject;
         }
         for (BeanPostProcessor bpp : beanPostProcessors) {
-            bean = bpp.postProcessAfterInitialization(bean, beanName);
+            beanObject = bpp.postProcessAfterInitialization(beanName, beanObject, objectClass);
         }
-        return bean;
+        // 设置最新依赖
+        setLatestDI(beanName, beanObject);
+        return beanObject;
     }
     /**
      * 对Bean对象进行依赖注入
@@ -225,13 +226,11 @@ public abstract class AbstractBeanFactory implements BeanFactory, Closeable {
             ((ApplicationContextAware) beanObject).setApplicationContext((ApplicationContext) this);
         }
         // 初始化对象之前处理
-        beanObject = applyPostProcessBeforeInitialization(beanObject, beanName);
+        beanObject = applyPostProcessBeforeInitialization(beanName, beanObject, beanObjectClass);
         // 对象初始化
         doInit(beanObject, beanDefinition);
         // 初始化对象之后的处理
-        beanObject = applyPostProcessAfterInitialization(beanObject, beanName);
-        setLatestDI(beanName, beanObject);
-        earlySingletonObjects.remove(beanName);
+        beanObject = applyPostProcessAfterInitialization(beanName, beanObject, beanObjectClass);
         // 如果是单例模式，则缓存到Map容器
         if (beanDefinition.isSingleton()) {
             singletonObjects.put(beanName, beanObject);

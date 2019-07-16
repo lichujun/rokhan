@@ -30,14 +30,14 @@ public class AdvisorAutoProxyCreator implements BeanPostProcessor {
     private final BeanFactory beanFactory;
 
     @Override
-    public Object postProcessBeforeInitialization(Object bean, String beanName) throws Throwable {
+    public Object postProcessBeforeInitialization(String beanName, Object bean, Class<?> beanClass) {
         return bean;
     }
 
     @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws Throwable {
+    public Object postProcessAfterInitialization(String beanName, Object bean, Class<?> beanClass) throws Throwable {
         // 在此判断bean是否需要进行切面增强
-        List<Advisor> matchAdvisors = getMatchedAdvisors(bean, beanName);
+        List<Advisor> matchAdvisors = getMatchedAdvisors(beanClass);
         // 如需要就进行增强,再返回增强的对象。
         if (CollectionUtils.isNotEmpty(matchAdvisors)) {
             bean = this.createProxy(bean, beanName, matchAdvisors);
@@ -47,17 +47,14 @@ public class AdvisorAutoProxyCreator implements BeanPostProcessor {
 
     /**
      * 获取匹配到所有的增强器
-     * @param bean Bean对象
-     * @param beanName Bean名称
      * @return 匹配到的所有增强器
      */
-    private List<Advisor> getMatchedAdvisors(Object bean, String beanName) {
+    private List<Advisor> getMatchedAdvisors(Class<?> beanClass) {
         if (CollectionUtils.isEmpty(advisors)) {
             return null;
         }
 
         // 得到类、所有的方法
-        Class<?> beanClass = bean.getClass();
         Set<Method> allMethods = ReflectionUtils.getDeclaredMethods(beanClass);
 
         // 存放匹配的Advisor的list

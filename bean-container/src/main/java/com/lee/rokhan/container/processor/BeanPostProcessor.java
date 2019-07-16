@@ -10,10 +10,10 @@ public interface BeanPostProcessor {
     /**
      * Bean初始化之前做的工作
      */
-    Object postProcessBeforeInitialization(Object bean, String beanName) throws Throwable;
+    Object postProcessBeforeInitialization(String beanName, Object bean, Class<?> beanClass) throws Throwable;
 
     /**
      * Bean初始化完成后做的工作
      */
-    Object postProcessAfterInitialization(Object bean, String beanName) throws Throwable;
+    Object postProcessAfterInitialization(String beanName, Object bean, Class<?> beanClass) throws Throwable;
 }

@@ -79,6 +79,14 @@ public class DemoController implements BeanNameAware, BeanFactoryAware, Applicat
     @Pointcut("execution(* com.lee.rokhan.demo..*.test1 (..))")
     private void some1() {}
 
+    @Pointcut("@annotation(com.lee.rokhan.demo.annotation.AopTest)")
+    private void some2() {}
+
+    @After("some2()")
+    public MethodReturnAdvice createReturn2() {
+        return (returnValue, method, args, target)  -> System.out.println("return2 " + returnValue);
+    }
+
     @After("some1()")
     public MethodReturnAdvice createReturn1() {
         return (returnValue, method, args, target)  -> System.out.println("return1 " + returnValue);
