@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class AbstractBeanFactory implements BeanFactory, AutoCloseable {
 
     // 考虑并发情况，默认256，防止扩容
-    private static final int DEFAULT_SIZE = 256;
+    protected static final int DEFAULT_SIZE = 256;
 
     // 存放Bean对象的容器，一级缓存
     private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(DEFAULT_SIZE);
@@ -44,6 +44,11 @@ public abstract class AbstractBeanFactory implements BeanFactory, AutoCloseable 
 
     // Bean初始化前后处理
     private final List<BeanPostProcessor> beanPostProcessors = Collections.synchronizedList(new ArrayList<>());
+
+    /**
+     * 依赖关系
+     */
+    protected final Map<String, Set<String>> beanRelationship = new ConcurrentHashMap<>(DEFAULT_SIZE);
 
     @Override
     public void registerBeanPostProcessor(BeanPostProcessor beanPostProcessor) {
@@ -171,7 +176,9 @@ public abstract class AbstractBeanFactory implements BeanFactory, AutoCloseable 
     @Override
     public Object getBean(String beanName) throws Throwable {
         Objects.requireNonNull(beanName, "注册Bean需要输入beanName");
-        return doGetBean(beanName);
+        synchronized (beanName.intern()) {
+            return doGetBean(beanName);
+        }
     }
 
     /**
@@ -277,8 +284,16 @@ public abstract class AbstractBeanFactory implements BeanFactory, AutoCloseable 
     /**
      * 设置最新依赖
      */
-    private void setLatestDI(String diBeanName, Object diBeanObject) throws Throwable {
-        processAllEarlyBean((beanName, beanObject) -> {
+    private void setLatestDI(String diBeanName, Object diBeanObject) {
+        Set<String> relationBeanNames = beanRelationship.get(diBeanName);
+        if (CollectionUtils.isEmpty(relationBeanNames)) {
+            return;
+        }
+        for (String beanName : relationBeanNames) {
+            Object beanObject = earlySingletonObjects.get(beanName);
+            if (beanObject == null) {
+                continue;
+            }
             BeanDefinition beanDefinition = getBeanDefinition(beanName);
             if (beanDefinition == null) {
                 return;
@@ -296,7 +311,7 @@ public abstract class AbstractBeanFactory implements BeanFactory, AutoCloseable 
                     ReflectionUtils.setFieldValue(beanObject, propertyValue.getName(), diBeanObject);
                 }
             }
-        });
+        }
     }
 
 }

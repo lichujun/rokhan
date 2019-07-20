@@ -78,7 +78,7 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
         if (injectionProperty.getComponentClass() == Configuration.class) {
             registerConfiguration(clazz, beanDefinition);
         }
-        registerBeanAndMethodDI(clazz, beanDefinition);
+        registerBeanAndMethodDI(clazz, beanName, beanDefinition);
     }
 
     /**
@@ -278,7 +278,7 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
      *
      * @param clazz 类对象
      */
-    private void registerBeanAndMethodDI(Class<?> clazz, BeanDefinition iocBeanDefinition) {
+    private void registerBeanAndMethodDI(Class<?> clazz, String beanName, BeanDefinition iocBeanDefinition) {
         if (iocBeanDefinition == null) {
             return;
         }
@@ -287,11 +287,11 @@ public class AnnotationApplicationContext extends AbstractApplicationContext {
             for (Field field : fields) {
                 // 如果是接口，则通过接口注册依赖信息
                 if (field.getType().isInterface()) {
-                    registerInterfaceDI(field, iocBeanDefinition);
+                    registerInterfaceDI(field, beanName, iocBeanDefinition);
                 }
                 // 如果是类，则通过类注册依赖信息
                 else {
-                    registerClassDI(field, iocBeanDefinition);
+                    registerClassDI(field, beanName, iocBeanDefinition);
                 }
             }
         }

@@ -23,6 +23,8 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.Field;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * 应用上下文抽象类
  * @author lichujun
@@ -33,22 +35,22 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
     /**
      * 应用上下文初始化前后增强
      */
-    private List<ContextPostProcessor> contextPostProcessors = new ArrayList<>();
+    private final List<ContextPostProcessor> contextPostProcessors = new ArrayList<>();
 
     /**
      * 扫描包扫出来的所有类
      */
-    private Set<Class<?>> classSet = new HashSet<>();
+    private final Set<Class<?>> classSet = new HashSet<>();
 
     /**
      * 增强器集合
      */
-    private List<Advisor> advisors = new ArrayList<>();
+    private final List<Advisor> advisors = new ArrayList<>();
 
     /**
      * 接口类型所实现的Bean对象的Bean名称
      */
-    private Map<Class<?>, Set<String>> typeToBeanNames = new HashMap<>(64);
+    private final Map<Class<?>, Set<String>> typeToBeanNames = new ConcurrentHashMap<>(DEFAULT_SIZE);
 
     /**
      * 组件属性
@@ -298,7 +300,7 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
      * @param field          field字段
      * @param beanDefinition Bean的注册信息
      */
-    void registerInterfaceDI(Field field, BeanDefinition beanDefinition) {
+    void registerInterfaceDI(Field field, String beanName, BeanDefinition beanDefinition) {
         Autowired autowired = field.getDeclaredAnnotation(Autowired.class);
         if (autowired == null) {
             return;
@@ -307,9 +309,15 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
         if (StringUtils.isBlank(propertyBeanName)) {
             propertyBeanName = getDIValueByType(field.getType());
         }
+        registerBeanRelationship(beanDefinition, beanName, field.getName(), propertyBeanName);
+    }
+
+    private void registerBeanRelationship(BeanDefinition beanDefinition, String beanName, String propertyName, String propertyBeanName) {
         BeanReference beanReference = new BeanReference(propertyBeanName);
-        PropertyValue propertyValue = new PropertyValue(field.getName(), beanReference, propertyBeanName);
+        PropertyValue propertyValue = new PropertyValue(propertyName, beanReference, propertyBeanName);
         beanDefinition.addPropertyValue(propertyValue);
+        Set<String> relationships = beanRelationship.computeIfAbsent(beanName, name -> Collections.synchronizedSet(new HashSet<>()));
+        relationships.add(propertyBeanName);
     }
 
     /**
@@ -318,7 +326,7 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
      * @param field          field字段
      * @param beanDefinition Bean的注册信息
      */
-    void registerClassDI(Field field, BeanDefinition beanDefinition) {
+    void registerClassDI(Field field, String beanName, BeanDefinition beanDefinition) {
         Autowired autowired = field.getDeclaredAnnotation(Autowired.class);
         if (autowired == null) {
             return;
@@ -331,9 +339,7 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
                 propertyBeanName = StringUtils.uncapitalize(field.getType().getSimpleName());
             }
         }
-        BeanReference beanReference = new BeanReference(propertyBeanName);
-        PropertyValue propertyValue = new PropertyValue(field.getName(), beanReference, propertyBeanName);
-        beanDefinition.addPropertyValue(propertyValue);
+        registerBeanRelationship(beanDefinition, beanName, field.getName(), propertyBeanName);
         AopProxyFactories.getDefaultAopProxyFactory().addClassBeanName(propertyBeanName);
     }
 
