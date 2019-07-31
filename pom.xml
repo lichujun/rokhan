@@ -13,6 +13,7 @@
         <module>bean-container</module>
         <module>demo</module>
         <module>vertx-web</module>
+        <module>mybatis</module>
     </modules>
 
     <properties>
