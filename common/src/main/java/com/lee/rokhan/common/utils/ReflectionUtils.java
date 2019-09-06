@@ -1,6 +1,8 @@
 package com.lee.rokhan.common.utils;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import java.lang.reflect.Field;
@@ -15,7 +17,8 @@ import java.util.*;
  * @date 2019/6/18 17:22
  */
 @Slf4j
-public abstract class ReflectionUtils {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class ReflectionUtils {
 
     /**
      * 通过类对象获取子类和所有父类的方法Method
