@@ -3,10 +3,13 @@ package com.lee.rokhan.vertx.web.utils;
 import com.lee.rokhan.vertx.web.codec.HttpResponse;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.eventbus.Message;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 /**
  * event bus异步数据转换工具类
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AsyncResultUtils {
 
     /**

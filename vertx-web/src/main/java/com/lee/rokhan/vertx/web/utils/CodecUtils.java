@@ -2,6 +2,8 @@ package com.lee.rokhan.vertx.web.utils;
 
 import com.alibaba.fastjson.JSON;
 import io.vertx.core.buffer.Buffer;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -9,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
  * @date 2019/2/25 10:37 PM
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CodecUtils {
 
     public static <T> void encode(Buffer buffer, T t) {
