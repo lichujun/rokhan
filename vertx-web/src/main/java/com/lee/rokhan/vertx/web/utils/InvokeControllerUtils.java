@@ -5,6 +5,8 @@ import com.lee.rokhan.vertx.web.pojo.ControllerInfo;
 import com.lee.rokhan.vertx.web.pojo.MethodParam;
 import com.lee.rokhan.vertx.web.pojo.MethodParamsWithHeaders;
 import io.vertx.core.MultiMap;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import java.lang.reflect.InvocationTargetException;
@@ -17,6 +19,7 @@ import java.util.Map;
  * @date 2019/2/8 3:03 PM
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InvokeControllerUtils {
 
     /**

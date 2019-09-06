@@ -2,6 +2,8 @@ package com.lee.rokhan.vertx.web.utils;
 
 import com.alibaba.fastjson.JSON;
 import com.lee.rokhan.vertx.web.pojo.MethodParam;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +14,7 @@ import java.util.Optional;
  * @author lichujun
  * @date 2019/3/15 19:04
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ParseParamUtils {
 
     public static List<Object> parse(Map<String, MethodParam> paramClassMap,

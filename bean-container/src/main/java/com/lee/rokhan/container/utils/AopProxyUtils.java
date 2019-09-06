@@ -4,6 +4,8 @@ import com.lee.rokhan.container.advice.AopAdviceChainInvocation;
 import com.lee.rokhan.container.advisor.Advisor;
 import com.lee.rokhan.container.advisor.impl.AspectJPointcutAdvisor;
 import com.lee.rokhan.container.factory.BeanFactory;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -15,6 +17,7 @@ import java.util.List;
  * @author lichujun
  * @date 2019/6/19 15:25
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AopProxyUtils {
 
     /**
