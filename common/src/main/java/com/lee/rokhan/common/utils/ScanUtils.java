@@ -1,6 +1,8 @@
 package com.lee.rokhan.common.utils;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.EnumerationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +18,7 @@ import java.util.jar.JarFile;
  * @author lichujun
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ScanUtils {
 
     private static final String URL_PROTOCOL_JAR = "jar";
