@@ -153,7 +153,7 @@ public abstract class AbstractApplicationContext extends AbstractBeanFactory imp
             Set<Class<?>> typeInterfaces = Optional.of(clazz)
                     .map(ReflectionUtils::getInterfaces)
                     .orElse(null);
-            if (typeInterfaces == null || CollectionUtils.isEmpty(typeInterfaces)) {
+            if (CollectionUtils.isEmpty(typeInterfaces)) {
                 return;
             }
             // 将接口和它的所有实现注册到容器中
