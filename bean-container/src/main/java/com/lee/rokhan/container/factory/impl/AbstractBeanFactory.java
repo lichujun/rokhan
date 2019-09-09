@@ -83,7 +83,7 @@ public abstract class AbstractBeanFactory implements BeanFactory, AutoCloseable 
 
     @Override
     public boolean containsBeanDefinition(String beanName) {
-        return beanDefinitionMap.keySet().contains(beanName);
+        return beanDefinitionMap.containsKey(beanName);
     }
 
     /**
