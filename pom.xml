@@ -31,7 +31,7 @@
         <maven.compile.version>2.3</maven.compile.version>
         <common.version>1.0-SNAPSHOT</common.version>
         <bean.container.version>1.0-SNAPSHOT</bean.container.version>
-        <mybatis.version>3.5.0</mybatis.version>
+        <mybatis.version>3.5.6</mybatis.version>
         <mysql.version>5.1.47</mysql.version>
         <druid.version>1.1.14</druid.version>
         <vertx.web.version>1.0-SNAPSHOT</vertx.web.version>
