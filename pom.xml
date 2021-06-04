@@ -19,7 +19,7 @@
     <properties>
         <fastjson.version>1.2.47</fastjson.version>
         <lombok.version>1.18.4</lombok.version>
-        <yaml.version>1.23</yaml.version>
+        <yaml.version>1.26</yaml.version>
         <logback.version>1.2.3</logback.version>
         <cglib.version>3.2.10</cglib.version>
         <vertx.version>3.6.3</vertx.version>
